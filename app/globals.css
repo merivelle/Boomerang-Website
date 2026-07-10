@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gutter: clamp(1rem, 2.5vw, 2.5rem);
+  /* Set by ViewportUnit. Never use 100vh — mobile browser chrome lies. */
+  --vh: 1vh;
+  --ease-signature: cubic-bezier(0.38, 0.005, 0.215, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-ink font-sans text-text;
+    font-optical-sizing: auto;
+    /* Dark-mode compensation: light-on-dark loses perceived weight.
+       The line-height bump is the one thing every source agrees on. */
+    line-height: 1.65;
+    letter-spacing: 0.012em;
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  ::selection {
+    background: theme("colors.text");
+    color: theme("colors.ink");
+  }
+
+  :focus-visible {
+    outline: 2px solid theme("colors.text");
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+@layer components {
+  .gutter {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+
+  /* Display type: regular weight, uppercase, negative leading.
+     Size and tightness do the work — never reach for bold. */
+  .display {
+    @apply text-display font-normal uppercase;
+  }
+
+  /* Metadata. Monospace ONLY where it encodes real data:
+     the live clock, years, counts, phone numbers. */
+  .meta {
+    @apply font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+  }
+
+  /* "The Return": a slow pan that reverses instead of jump-cutting to frame one.
+     CSS animation, so it runs off the main thread and survives page-load jank. */
+  .yoyo {
+    animation: drift 16s var(--ease-signature) infinite alternate;
+    will-change: transform;
+  }
+
+  /* The mark is shaped like a musical flat (♭). It beats. `alternate` so the
+     swell reverses — the Return, at metronome scale. */
+  .heartbeat {
+    animation: beat 1.05s var(--ease-signature) infinite alternate;
+    will-change: transform;
+  }
+
+  /* Hero C columns breathe (Ken-Burns). Duration/delay set per column inline. */
+  .drift-col {
+    animation-name: drift;
+    animation-timing-function: var(--ease-signature);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    will-change: transform;
+  }
+}
+
+/* Heartbeat — a swell, not a bounce. Kept tiny so it reads as breath. */
+@keyframes beat {
+  from { transform: scale(1); }
+  to { transform: scale(1.055); }
+}
+
+/* Glitch slice — a still tearing into the next, ported from the motion lab.
+   clip-path steps + a brief RGB split. The split is stripped in JS after the
+   run so the settled frame never keeps a red fringe. */
+@keyframes glitch {
+  0% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+  18% { clip-path: inset(11% 0 62% 0); transform: translateX(-2.4%); }
+  34% { clip-path: inset(47% 0 23% 0); transform: translateX(3%); }
+  52% { clip-path: inset(69% 0 7% 0); transform: translateX(-1.6%); }
+  70% { clip-path: inset(28% 0 44% 0); transform: translateX(1.8%); }
+  100% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+}
+.glitching {
+  animation: glitch 280ms steps(1, end) 1;
+}
+
+/* Reduced motion means fewer and gentler animations, not zero.
+   Keep opacity and colour transitions — they aid comprehension.
+   Remove movement. A blanket `*{0.01ms !important}` would also strand
+   any reveal that waits on a transitionend. */
+@media (prefers-reduced-motion: reduce) {
+  .yoyo,
+  .animate-marquee,
+  .heartbeat,
+  .glitching,
+  .drift-col {
+    animation: none !important;
+  }
+  .yoyo,
+  .drift-col {
+    transform: scale(1.06);
+  }
+  *,
+  *::before,
+  *::after {
+    transition-property: opacity, color, background-color, border-color, fill,
+      stroke !important;
+    transition-duration: 200ms !important;
+  }
+}
