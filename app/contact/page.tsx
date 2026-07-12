@@ -21,7 +21,12 @@ const rows: { label: string; value: string; href?: string; external?: boolean }[
   },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  const { email } = await searchParams;
   return (
     <div className="gutter pb-28 pt-28 md:pt-36">
       {/* Hero — CONTACT + diagonal arrow */}
@@ -83,7 +88,7 @@ export default function ContactPage() {
         <p className="mb-8 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
           Send a message
         </p>
-        <ContactForm />
+        <ContactForm initialEmail={email} />
       </section>
     </div>
   );

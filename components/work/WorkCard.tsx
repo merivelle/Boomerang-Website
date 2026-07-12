@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/content/projects";
 import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
+import { useLightbox } from "@/components/media/LightboxProvider";
 import { useSound } from "./SoundContext";
 
 // A frame in the contact sheet. Locked 16/9; the 2px gutter lives on the parent
@@ -22,6 +22,7 @@ export function WorkCard({
   fill?: boolean;
 }) {
   const { enabled } = useSound();
+  const { open } = useLightbox();
   const [hot, setHot] = useState(false); // hover OR keyboard focus
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -48,9 +49,11 @@ export function WorkCard({
   const playing = hot && enabled && !!project.audio;
 
   return (
-    <Link
-      href={`/work/${project.slug}`}
-      className={`group relative block overflow-hidden bg-s1 ${fill ? "h-full" : ""}`}
+    <button
+      type="button"
+      onClick={() => open(project)}
+      aria-label={`${project.title} — ${project.studio}`}
+      className={`group relative block w-full overflow-hidden bg-s1 text-left ${fill ? "h-full" : ""}`}
       onMouseEnter={() => canHover() && setHot(true)}
       onMouseLeave={() => setHot(false)}
       onFocus={() => setHot(true)}
@@ -107,6 +110,6 @@ export function WorkCard({
       {project.audio && (
         <audio ref={audioRef} src={project.audio} preload="none" loop />
       )}
-    </Link>
+    </button>
   );
 }

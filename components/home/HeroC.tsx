@@ -6,6 +6,7 @@ import type { Project } from "@/content/projects";
 import { getProject } from "@/content/projects";
 import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
+import { useLightbox } from "@/components/media/LightboxProvider";
 import { SoundProvider, useSound } from "@/components/work/SoundContext";
 import { SoundToggle } from "@/components/work/SoundToggle";
 
@@ -24,6 +25,7 @@ const COLUMNS = HERO_SLUGS.map(getProject).filter(Boolean) as Project[];
 
 function Columns() {
   const { enabled } = useSound();
+  const { open } = useLightbox();
   const [active, setActive] = useState<number | null>(null);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
 
@@ -50,16 +52,17 @@ function Columns() {
         const hot = active === i;
         const playing = hot && enabled && !!p.audio;
         return (
-          <Link
+          <button
             key={p.slug}
-            href={`/work/${p.slug}`}
+            type="button"
+            onClick={() => open(p)}
             aria-label={`${p.title} — ${p.studio}`}
             onMouseEnter={() => canHover() && setActive(i)}
             onMouseLeave={() => setActive(null)}
             onFocus={() => setActive(i)}
             onBlur={() => setActive(null)}
             style={{ flexGrow: hot ? 2.6 : active === null ? 1 : 0.7 }}
-            className="group relative block min-w-0 basis-0 overflow-hidden outline-none transition-[flex-grow] duration-[600ms] ease-signature focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text"
+            className="group relative block min-w-0 basis-0 overflow-hidden text-left outline-none transition-[flex-grow] duration-[600ms] ease-signature focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text"
           >
             {/* Ambient drift frame — slightly oversized so the pan never shows edges. */}
             <div
@@ -108,7 +111,7 @@ function Columns() {
                 loop
               />
             )}
-          </Link>
+          </button>
         );
       })}
     </div>

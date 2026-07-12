@@ -22,12 +22,15 @@ export function HoverIndex<T extends IndexItem>({
   items,
   renderRow,
   onActivate,
+  onSelect,
   className,
   minHeight = "min-h-[400px] md:min-h-[460px]",
 }: {
   items: T[];
   renderRow: (item: T, active: boolean, index: number) => React.ReactNode;
   onActivate?: (index: number) => void;
+  // Click/select a row (no href). Rows render as buttons when this is provided.
+  onSelect?: (item: T, index: number) => void;
   className?: string;
   // The stage sizes to its rows; this floor keeps a short list cinematic. A long
   // list (all studios) simply grows past it — never clips.
@@ -115,6 +118,7 @@ export function HoverIndex<T extends IndexItem>({
                   type="button"
                   aria-current={isActive ? "true" : undefined}
                   className={shared}
+                  onClick={() => onSelect?.(item, i)}
                   onMouseEnter={() => canHover() && activate(i)}
                   onFocus={() => activate(i)}
                 >

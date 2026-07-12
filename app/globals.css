@@ -98,6 +98,12 @@
   to { transform: scale(1.055); }
 }
 
+/* Lightbox entrance — a plain fade so the trailer/still doesn't pop. */
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Glitch slice — a still tearing into the next, ported from the motion lab.
    clip-path steps + a brief RGB split. The split is stripped in JS after the
    run so the settled frame never keeps a red fringe. */

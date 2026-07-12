@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { featured } from "@/content/projects";
 import { HoverIndex, type IndexItem } from "@/components/work/HoverIndex";
 import { Waveform } from "@/components/motion/Waveform";
+import { useLightbox } from "@/components/media/LightboxProvider";
 import { SoundProvider, useSound } from "@/components/work/SoundContext";
 import { SoundToggle } from "@/components/work/SoundToggle";
 
@@ -15,11 +16,11 @@ const items: FilmItem[] = FILMS.map((f) => ({
   key: f.slug,
   bgSlug: f.slug,
   bgTitle: f.title,
-  href: `/work/${f.slug}`,
 }));
 
 function Index() {
   const { enabled } = useSound();
+  const { open } = useLightbox();
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
 
   const onActivate = (i: number) => {
@@ -40,6 +41,7 @@ function Index() {
       <HoverIndex
         items={items}
         onActivate={onActivate}
+        onSelect={(_item, i) => open(FILMS[i])}
         renderRow={(item, active, i) => (
           <div className="grid grid-cols-[2rem_1fr_auto] items-baseline gap-3 md:gap-6">
             <span className="font-mono text-[0.62rem] tabular-nums text-faint">

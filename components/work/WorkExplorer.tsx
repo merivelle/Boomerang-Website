@@ -1,19 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { CATEGORIES, type Project } from "@/content/projects";
 import { WorkCard } from "./WorkCard";
 import { SoundProvider } from "./SoundContext";
 import { SoundToggle } from "./SoundToggle";
+import { useLightbox } from "@/components/media/LightboxProvider";
 
 const STEP = 12;
 
 function IndexRow({ project }: { project: Project }) {
+  const { open } = useLightbox();
   return (
-    <Link
-      href={`/work/${project.slug}`}
-      className="group grid grid-cols-[1fr_auto] items-baseline gap-4 border-t border-line py-5 transition-colors duration-hover ease-out hover:bg-s1 md:grid-cols-[1fr_1fr_6rem] md:gap-8"
+    <button
+      type="button"
+      onClick={() => open(project)}
+      className="group grid w-full grid-cols-[1fr_auto] items-baseline gap-4 border-t border-line py-5 text-left transition-colors duration-hover ease-out hover:bg-s1 md:grid-cols-[1fr_1fr_6rem] md:gap-8"
     >
       <span className="text-xl uppercase tracking-[-0.02em] text-text md:text-2xl">
         {project.title}
@@ -24,7 +26,7 @@ function IndexRow({ project }: { project: Project }) {
       <span className="justify-self-end font-mono text-[0.7rem] tabular-nums text-faint">
         {project.year}
       </span>
-    </Link>
+    </button>
   );
 }
 
