@@ -39,3 +39,6 @@ yarn-error.log*
 # local tooling
 /.claude/
 /scratchpad/
+
+# local scratch
+/scratchpad/
