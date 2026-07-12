@@ -72,7 +72,9 @@ export async function POST(req: Request) {
       text: `${message}\n\n— ${name} (${email})`,
     });
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    // Surface the real cause in the Vercel function logs for debugging.
+    console.error("Contact form sendMail failed:", err);
     return NextResponse.json(
       { error: "Couldn't send right now. Try again or email us directly." },
       { status: 502 },
