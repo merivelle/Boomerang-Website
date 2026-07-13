@@ -71,6 +71,7 @@ export const projects: Project[] = [
   { slug: "cocaine-bear", title: "Cocaine Bear", category: "Film", studio: "Universal", year: 2023, role: "Trailer Campaign", mood: "Momentum", tone: 0.4 },
   { slug: "the-color-purple", title: "The Color Purple", category: "Film", studio: "Warner Bros.", year: 2023, role: "Trailer Campaign", mood: "Triumph", tone: 0.6 },
   { slug: "glass-onion", title: "Glass Onion: A Knives Out Mystery", category: "Film", studio: "Netflix", year: 2022, role: "Trailer Campaign", mood: "Momentum", tone: 0.58 },
+  { slug: "elvis", title: "Elvis", category: "Film", studio: "Warner Bros.", year: 2022, role: "Trailer Campaign", mood: "Rapture", tone: 0.58 },
   { slug: "imaginary", title: "Imaginary", category: "Horror", studio: "Lionsgate", year: 2024, role: "Trailer Campaign", mood: "Dread", tone: 0.3 },
 
   // — Series —
