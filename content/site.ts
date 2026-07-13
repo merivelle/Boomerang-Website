@@ -16,14 +16,6 @@ export const site = {
   intro:
     "Boomerang is a trailer-music, scoring and sound-design house. Orchestral, electronic, hard rock, post-rock, and experimental sound design, built to move an audience in ninety seconds.",
 
-  // Above-the-fold credibility (Zealot pattern).
-  // Non-breaking hyphens (U+2011) keep "Spider‑Man" from splitting across lines.
-  stats: [
-    { value: "1,000+", label: "Trailer placements" },
-    { value: "X‑Men · Spider‑Man", label: "Franchise origins" },
-    { value: "Oscars · Olympics", label: "Broadcast telecasts" },
-  ],
-
   bio: [
     "Mark Hannah is the founder and artistic director of Boomerang Music in Los Angeles, and a composer and music producer. Over the past 20+ years, Boomerang has created music and sound design for thousands of motion picture, video game, and brand advertising campaigns.",
     "Notable credits include Clio Award-winning campaigns for “Furiosa: A Mad Max Saga,” “John Wick 4,” “Cocaine Bear,” “Elvis,” “Guardians of the Galaxy Vol. 3,” “The Revenant,” “Barbie,” and “Us.”",

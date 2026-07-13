@@ -46,16 +46,6 @@ export default function AboutPage() {
                 {site.location}
               </dd>
             </div>
-            {site.stats.map((s) => (
-              <div key={s.label} className="border-b border-line py-5">
-                <dt className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
-                  {s.label}
-                </dt>
-                <dd className="mt-2 text-lg uppercase tracking-[-0.02em] text-text">
-                  {s.value}
-                </dd>
-              </div>
-            ))}
           </dl>
 
           <Link
