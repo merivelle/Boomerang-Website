@@ -148,6 +148,12 @@ export const featured = projects.filter((p) => p.featured);
 export const getProject = (slug: string) =>
   projects.find((p) => p.slug === slug);
 
+// Newest-first by release year. Stable sort keeps the curated order within a
+// year (films only carry `year`, so same-year ties can't be date-ordered).
+export const projectsByReleaseNewest: Project[] = [...projects].sort(
+  (a, b) => b.year - a.year,
+);
+
 export type Studio = {
   name: string;
   films: Project[];
