@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { projectsByReleaseNewest } from "@/content/projects";
+import { projectsWithStills } from "@/content/projects";
 import { WorkCard } from "@/components/work/WorkCard";
 import { SoundProvider } from "@/components/work/SoundContext";
 
@@ -16,7 +16,7 @@ const HERO_SLUGS = new Set([
   "the-end-of-oak-street",
   "masters-of-the-universe",
 ]);
-const REST = projectsByReleaseNewest.filter((p) => !HERO_SLUGS.has(p.slug));
+const REST = projectsWithStills.filter((p) => !HERO_SLUGS.has(p.slug));
 // The homepage shows a strong selection; the full archive lives on /work
 // (paged + filterable). Real-still credits lead the array, so the cut is curated.
 const SHOWN = 24;

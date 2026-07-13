@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { projectsByReleaseNewest } from "@/content/projects";
+import { projectsWithStills } from "@/content/projects";
 import { WorkExplorer } from "@/components/work/WorkExplorer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LightboxProvider } from "@/components/media/LightboxProvider";
@@ -15,7 +15,7 @@ export default function WorkPage() {
     <LightboxProvider>
       <div className="gutter pb-28 pt-28 md:pt-36">
         <PageHeader title="Work" />
-        <WorkExplorer projects={projectsByReleaseNewest} />
+        <WorkExplorer projects={projectsWithStills} />
       </div>
     </LightboxProvider>
   );

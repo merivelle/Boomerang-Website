@@ -155,6 +155,39 @@ export const projectsByReleaseNewest: Project[] = [...projects].sort(
   (a, b) => b.year - a.year,
 );
 
+// Credits still on a generated tone-placeholder (no real film frame yet). They
+// stay in `projects` (the full credit list) but are hidden from the gallery and
+// /work until a real still is added. To bring one back: drop the real frame at
+// public/assets/stills/<slug>.jpg and delete its slug from this set.
+export const PLACEHOLDER_SLUGS = new Set<string>([
+  "unhinged",
+  "at-the-gates",
+  "knock-at-the-cabin",
+  "them",
+  "dawn-of-the-planet-of-the-apes",
+  "snake-eyes",
+  "last-night-in-soho",
+  "let-him-go",
+  "argo",
+  "127-hours",
+  "birds-of-prey",
+  "hugo",
+  "nhl",
+  "onward",
+  "dumb-money",
+  "enola-holmes",
+  "the-bfg",
+  "the-secret-life-of-pets",
+  "cinderella",
+  "a-beautiful-day-in-the-neighborhood",
+  "minions",
+]);
+
+// Films with a real still, newest-first — what the gallery and /work show.
+export const projectsWithStills: Project[] = projectsByReleaseNewest.filter(
+  (p) => !PLACEHOLDER_SLUGS.has(p.slug),
+);
+
 export type Studio = {
   name: string;
   films: Project[];
