@@ -15,14 +15,11 @@ export default function AboutPage() {
 
       <div className="grid gap-14 lg:grid-cols-[1.3fr_1fr] lg:gap-20">
         <div>
-          <p className="max-w-[46ch] text-xl leading-relaxed text-text">
-            {site.quote.text}
-          </p>
-          <p className="mt-5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
-            {site.quote.attribution} — {site.role}
+          <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
+            {site.founder} · {site.role}
           </p>
 
-          <div className="mt-12 max-w-[65ch] space-y-6">
+          <div className="mt-8 max-w-[65ch] space-y-6">
             {site.bio.map((para, i) => (
               <p key={i} className="text-base leading-relaxed text-muted">
                 {para}

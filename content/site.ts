@@ -4,8 +4,8 @@ export const site = {
   name: "Boomerang",
   wordmark: "boomerang",
   founder: "Mark Hannah",
-  role: "Composer & Owner",
-  location: "Burbank · Los Angeles",
+  role: "Composer, Creative Director, Founder",
+  location: "Los Angeles",
 
   // The founder's own voice. Used on the About page only — nowhere is there an
   // invented tagline. The site's words are film titles, studios, the company
@@ -14,7 +14,7 @@ export const site = {
     "Film is the marathon. The trailer is the hundred-metre dash. I score both.",
 
   intro:
-    "Boomerang is a trailer-music, scoring and sound-design house. Orchestral, electronic, hard rock, post-rock, and experimental sound design — built to move an audience in ninety seconds.",
+    "Boomerang is a trailer-music, scoring and sound-design house. Orchestral, electronic, hard rock, post-rock, and experimental sound design, built to move an audience in ninety seconds.",
 
   // Above-the-fold credibility (Zealot pattern).
   // Non-breaking hyphens (U+2011) keep "Spider‑Man" from splitting across lines.
@@ -25,14 +25,9 @@ export const site = {
   ],
 
   bio: [
-    "Mark Hannah founded Boomerang Music in Los Angeles and launched it alongside the X-Men and Spider-Man franchises. Two decades and more than a thousand placements later, his music and sound design have shaped campaigns for blockbusters, Academy Award–winning films, animated features, video games, and broadcast events including the Oscars and the Olympic Games.",
-    "The work spans orchestral scores, electronic textures, hard rock, post-rock, and experimental sound design — whatever the cut demands. Every piece is built for the specific job of a trailer: tension, release, and a moment you remember.",
+    "Mark Hannah is the founder and artistic director of Boomerang Music in Los Angeles, and a composer and music producer. Over the past 20+ years, Boomerang has created music and sound design for thousands of motion picture, video game, and brand advertising campaigns.",
+    "Notable credits include Clio Award-winning campaigns for “Furiosa: A Mad Max Saga,” “John Wick 4,” “Cocaine Bear,” “Elvis,” “Guardians of the Galaxy Vol. 3,” “The Revenant,” “Barbie,” and “Us.”",
   ],
-
-  quote: {
-    text: "The difference between film and trailer is that film is the marathon runner, the trailer is the hundred-metre dash guy — and I love creating music and sound design for both.",
-    attribution: "Mark Hannah",
-  },
 
   contact: {
     phone: "310.801.4142",
