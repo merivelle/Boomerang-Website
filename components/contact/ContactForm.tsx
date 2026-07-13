@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 
-// Posts to /api/contact (SMTP via nodemailer). The email arrives prefilled from
-// the homepage bubble via ?email=; the visitor adds name, subject, message.
-const field =
-  "w-full border-b border-line bg-transparent py-4 text-text placeholder:text-faint transition-colors duration-hover ease-out focus:border-text focus:outline-none";
+// Posts to /api/contact (SMTP via nodemailer). Editorial rows: label far-left,
+// field far-right, thin rules between. The email arrives prefilled from the
+// homepage bubble via ?email=; the visitor adds name + message.
+const row =
+  "grid grid-cols-[5.5rem_1fr] items-baseline gap-5 border-t border-line py-5 md:grid-cols-[12rem_1fr] md:py-6";
 const label = "font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint";
+const input =
+  "w-full bg-transparent text-text placeholder:text-faint focus:outline-none md:text-lg";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export function ContactForm({ initialEmail }: { initialEmail?: string }) {
   const [email, setEmail] = useState(initialEmail ?? "");
   const [name, setName] = useState("");
-  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [company, setCompany] = useState(""); // honeypot
   const [status, setStatus] = useState<Status>("idle");
@@ -27,7 +29,7 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, subject, message, company }),
+        body: JSON.stringify({ email, name, message, company }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -35,7 +37,6 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
       }
       setStatus("sent");
       setName("");
-      setSubject("");
       setMessage("");
     } catch (err) {
       setStatus("error");
@@ -45,7 +46,7 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
 
   if (status === "sent") {
     return (
-      <p className="max-w-xl text-lg leading-relaxed text-text">
+      <p className="border-t border-line pt-8 text-lg leading-relaxed text-text">
         Thanks — your message is on its way. We&rsquo;ll be in touch shortly.
       </p>
     );
@@ -54,49 +55,50 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
   const sending = status === "sending";
 
   return (
-    <form onSubmit={submit} className="max-w-xl">
-      <label className="block">
-        <span className={label}>Email</span>
+    <form onSubmit={submit}>
+      <div className={row}>
+        <label htmlFor="cf-email" className={label}>
+          Email
+        </label>
         <input
+          id="cf-email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={field}
+          className={input}
           placeholder="name@studio.com"
         />
-      </label>
+      </div>
 
-      <label className="mt-8 block">
-        <span className={label}>Name</span>
+      <div className={row}>
+        <label htmlFor="cf-name" className={label}>
+          Name
+        </label>
         <input
+          id="cf-name"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={field}
-          placeholder="Jane Doe"
+          className={input}
         />
-      </label>
+      </div>
 
-      <label className="mt-8 block">
-        <span className={label}>Subject</span>
-        <input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className={field}
-        />
-      </label>
-
-      <label className="mt-8 block">
-        <span className={label}>Message</span>
+      <div className={`${row} items-start`}>
+        <label htmlFor="cf-message" className={label}>
+          Message
+        </label>
         <textarea
+          id="cf-message"
           required
           rows={4}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className={`${field} resize-none`}
+          className={`${input} resize-none`}
         />
-      </label>
+      </div>
+
+      <div className="border-t border-line" />
 
       {/* Honeypot — hidden from people, catches bots. */}
       <input

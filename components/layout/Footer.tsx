@@ -18,12 +18,6 @@ export function Footer() {
           >
             {site.contact.phone}
           </a>
-          <a
-            href={`mailto:${site.contact.email}`}
-            className="mt-1 block text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
-          >
-            {site.contact.email}
-          </a>
         </div>
         <div>
           <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
