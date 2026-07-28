@@ -8,7 +8,6 @@ import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
 import { useLightbox } from "@/components/media/LightboxProvider";
 import { SoundProvider, useSound } from "@/components/work/SoundContext";
-import { SoundToggle } from "@/components/work/SoundToggle";
 
 // The current slate, in order — the hero the loader reveals to. KODE motion:
 // each column drifts continuously (Ken-Burns), and hover/focus expands it and
@@ -133,9 +132,6 @@ export function HeroC() {
           >
             View all work →
           </Link>
-          <div className="pointer-events-auto">
-            <SoundToggle />
-          </div>
         </div>
       </section>
     </SoundProvider>
