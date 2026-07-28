@@ -19,12 +19,19 @@ export default function AboutPage() {
             {site.founder} · {site.role}
           </p>
 
-          <div className="mt-8 max-w-[65ch] space-y-6">
-            {site.bio.map((para, i) => (
-              <p key={i} className="text-base leading-relaxed text-muted">
-                {para}
-              </p>
-            ))}
+          <div className="mt-8 max-w-[62ch] space-y-6">
+            <p className="text-lg leading-relaxed text-text md:text-xl">
+              {site.bio}
+            </p>
+            <p className="text-base leading-relaxed text-muted">
+              {site.credits.lead}{" "}
+              {site.credits.titles.map((title, i, arr) => (
+                <span key={title}>
+                  <span className="font-medium text-text">{title}</span>
+                  {i < arr.length - 2 ? ", " : i === arr.length - 2 ? ", and " : "."}
+                </span>
+              ))}
+            </p>
           </div>
         </div>
 

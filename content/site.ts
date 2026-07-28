@@ -16,10 +16,22 @@ export const site = {
   intro:
     "Boomerang is a trailer-music, scoring and sound-design house. Orchestral, electronic, hard rock, post-rock, and experimental sound design, built to move an audience in ninety seconds.",
 
-  bio: [
-    "Mark Hannah is the founder and artistic director of Boomerang Music in Los Angeles, and a composer and music producer. Over the past 20+ years, Boomerang has created music and sound design for thousands of motion picture, video game, and brand advertising campaigns.",
-    "Notable credits include Clio Award-winning campaigns for “Furiosa: A Mad Max Saga,” “John Wick 4,” “Cocaine Bear,” “Elvis,” “Guardians of the Galaxy Vol. 3,” “The Revenant,” “Barbie,” and “Us.”",
-  ],
+  bio: "Mark Hannah is the founder and artistic director of Boomerang Music in Los Angeles, and a composer and music producer. Over the past 20+ years, Boomerang has created music and sound design for thousands of motion picture, video game, and brand advertising campaigns.",
+
+  // Rendered on About with the film titles emphasized (bright) instead of quoted.
+  credits: {
+    lead: "Notable credits include Clio Award-winning campaigns for",
+    titles: [
+      "Furiosa: A Mad Max Saga",
+      "John Wick 4",
+      "Cocaine Bear",
+      "Elvis",
+      "Guardians of the Galaxy Vol. 3",
+      "The Revenant",
+      "Barbie",
+      "Us",
+    ],
+  },
 
   contact: {
     phone: "310.801.4142",
