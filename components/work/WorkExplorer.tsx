@@ -1,10 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CATEGORIES, type Project } from "@/content/projects";
+import {
+  CATEGORIES,
+  OSCAR_FILTER,
+  OSCAR_SLUGS,
+  type Project,
+} from "@/content/projects";
 import { WorkCard } from "./WorkCard";
 import { SoundProvider } from "./SoundContext";
-import { SoundToggle } from "./SoundToggle";
 import { useLightbox } from "@/components/media/LightboxProvider";
 
 const STEP = 12;
@@ -35,10 +39,11 @@ export function WorkExplorer({ projects }: { projects: Project[] }) {
   const [view, setView] = useState<"grid" | "index">("grid");
   const [count, setCount] = useState(STEP);
 
-  const filtered = useMemo(
-    () => (cat === "All" ? projects : projects.filter((p) => p.category === cat)),
-    [cat, projects],
-  );
+  const filtered = useMemo(() => {
+    if (cat === "All") return projects;
+    if (cat === OSCAR_FILTER) return projects.filter((p) => OSCAR_SLUGS.has(p.slug));
+    return projects.filter((p) => p.category === cat);
+  }, [cat, projects]);
   const visible = view === "index" ? filtered : filtered.slice(0, count);
 
   return (
@@ -46,7 +51,7 @@ export function WorkExplorer({ projects }: { projects: Project[] }) {
       <div className="sticky top-16 z-30 -mx-[var(--gutter)] mb-8 border-y border-line bg-ink/90 px-[var(--gutter)] py-4 backdrop-blur-sm md:top-20">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {["All", ...CATEGORIES].map((c) => (
+            {["All", ...CATEGORIES, OSCAR_FILTER].map((c) => (
               <button
                 key={c}
                 onClick={() => {
@@ -63,7 +68,6 @@ export function WorkExplorer({ projects }: { projects: Project[] }) {
           </div>
 
           <div className="flex items-center gap-6">
-            <SoundToggle />
             <div className="flex items-center gap-3 font-mono text-[0.7rem] uppercase tracking-[0.14em]">
               <button
                 onClick={() => setView("grid")}

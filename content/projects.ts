@@ -188,6 +188,48 @@ export const projectsWithStills: Project[] = projectsByReleaseNewest.filter(
   (p) => !PLACEHOLDER_SLUGS.has(p.slug),
 );
 
+// Credits that earned Academy Award nominations. A cross-cutting tag — each film
+// keeps its own category — powering the "Oscar Nominees" filter on /work.
+export const OSCAR_FILTER = "Oscar Nominees";
+export const OSCAR_SLUGS = new Set<string>([
+  "killers-of-the-flower-moon",
+  "barbie",
+  "elvis",
+  "past-lives",
+  "the-color-purple",
+  "glass-onion",
+  "the-irishman",
+  "roma",
+  "1917",
+  "the-revenant",
+  "dunkirk",
+  "mad-max-fury-road",
+  "inception",
+  "the-dark-knight",
+  "the-trial-of-the-chicago-7",
+  "promising-young-woman",
+  "knives-out",
+  "a-quiet-place",
+  "spotlight",
+  "jackie",
+  "brooklyn",
+  "silence",
+  "creed",
+  "ad-astra",
+  "the-post",
+  "lion",
+  "fantastic-beasts",
+  "gravity",
+  "zero-dark-thirty",
+  "no-country-for-old-men",
+  "there-will-be-blood",
+  // Pre-tagged but currently on placeholder stills (hidden until a real frame):
+  "argo",
+  "hugo",
+  "127-hours",
+  "a-beautiful-day-in-the-neighborhood",
+]);
+
 export type Studio = {
   name: string;
   films: Project[];
