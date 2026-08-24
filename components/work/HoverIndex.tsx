@@ -8,13 +8,18 @@ import { Still } from "@/components/ui/Still";
 // A stacked-still background that glitch-swaps to match the active row, over a
 // list whose active row is solid and whose others are ghosted by the caller.
 //
-// Used twice: films (hover → its cue) and studios (hover → its films). The row
-// content and any audio are the caller's job; this owns active state, the
-// background crossfade + glitch, keyboard, and the SSR-safe default.
+// Used twice: films (hover → its trailer loop) and studios (hover → its films).
+// The row content is the caller's job; this owns active state, the background
+// crossfade + glitch, keyboard, and the SSR-safe default.
+//
+// An item may carry a `bgClip` — a silent looping trailer clip that plays over
+// its still while the row is active. Items without one behave exactly as before,
+// which is what keeps the studios list untouched.
 export type IndexItem = {
   key: string;
   bgSlug: string;
   bgTitle: string;
+  bgClip?: string;
   href?: string;
 };
 
@@ -39,6 +44,14 @@ export function HoverIndex<T extends IndexItem>({
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
   const bgRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  // Clips are fetched on first hover, never on load, and stay mounted after so
+  // a second pass over the same row is instant.
+  const [mounted, setMounted] = useState<number[]>([]);
+  // A clip only fades up once it is actually playing, so a missing or
+  // undecodable file leaves the still in place instead of a black rectangle.
+  const [playing, setPlaying] = useState<number[]>([]);
 
   const canHover = () =>
     typeof window !== "undefined" &&
@@ -48,6 +61,21 @@ export function HoverIndex<T extends IndexItem>({
     if (i === active) return;
     setActive(i);
     onActivate?.(i);
+  };
+
+  // Separate from activate(), which early-returns on the already-active row —
+  // otherwise row 0, active from the first paint, would never load its clip.
+  //
+  // Gated on canHover() as well as the row's own handler: tapping a row focuses
+  // it, and a touch device would otherwise pull down a clip it can never show.
+  const mount = (i: number) => {
+    if (reduced || !canHover() || !items[i]?.bgClip) return;
+    setMounted((prev) => (prev.includes(i) ? prev : [...prev, i]));
+  };
+
+  const enter = (i: number) => {
+    mount(i);
+    activate(i);
   };
 
   // Fire the glitch on the newly-active frame, then strip it so the settled
@@ -63,8 +91,41 @@ export function HoverIndex<T extends IndexItem>({
     return () => clearTimeout(t);
   }, [active, reduced]);
 
+  // Only the active clip runs. The rest rewind so a re-hover starts on the
+  // frame the cut was designed to open on.
+  useEffect(() => {
+    videoRefs.current.forEach((el, i) => {
+      if (!el) return;
+      if (i === active && !reduced) {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      } else {
+        el.pause();
+      }
+    });
+  }, [active, mounted, reduced]);
+
+  // Nothing keeps decoding once the stage has scrolled away.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        videoRefs.current.forEach((v, i) => {
+          if (!v) return;
+          if (!entry.isIntersecting) v.pause();
+          else if (i === active && !reduced) v.play().catch(() => {});
+        });
+      },
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [active, reduced]);
+
   return (
     <div
+      ref={stageRef}
       className={`relative flex overflow-hidden bg-ink ${minHeight} ${className ?? ""}`}
     >
       {/* Background: every still stacked, only the active one shown. */}
@@ -87,6 +148,33 @@ export function HoverIndex<T extends IndexItem>({
               sizes="100vw"
               className="brightness-[0.5] saturate-[0.8]"
             />
+            {item.bgClip && mounted.includes(i) ? (
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src={item.bgClip}
+                muted
+                loop
+                playsInline
+                preload="none"
+                aria-hidden
+                // Same grade as the still beneath, so the hand-off is invisible.
+                className={`absolute inset-0 h-full w-full object-cover brightness-[0.5] saturate-[0.8] transition-opacity duration-500 ease-signature ${
+                  i === active && playing.includes(i)
+                    ? "opacity-100"
+                    : "opacity-0"
+                }`}
+                onPlaying={() =>
+                  setPlaying((prev) =>
+                    prev.includes(i) ? prev : [...prev, i],
+                  )
+                }
+                onError={() =>
+                  setPlaying((prev) => prev.filter((k) => k !== i))
+                }
+              />
+            ) : null}
           </div>
         ))}
         {/* Left-weighted scrim so the rows always clear contrast. */}
@@ -108,8 +196,8 @@ export function HoverIndex<T extends IndexItem>({
                   href={item.href}
                   aria-current={isActive ? "true" : undefined}
                   className={shared}
-                  onMouseEnter={() => canHover() && activate(i)}
-                  onFocus={() => activate(i)}
+                  onMouseEnter={() => canHover() && enter(i)}
+                  onFocus={() => enter(i)}
                 >
                   {inner}
                 </a>
@@ -119,8 +207,8 @@ export function HoverIndex<T extends IndexItem>({
                   aria-current={isActive ? "true" : undefined}
                   className={shared}
                   onClick={() => onSelect?.(item, i)}
-                  onMouseEnter={() => canHover() && activate(i)}
-                  onFocus={() => activate(i)}
+                  onMouseEnter={() => canHover() && enter(i)}
+                  onFocus={() => enter(i)}
                 >
                   {inner}
                 </button>

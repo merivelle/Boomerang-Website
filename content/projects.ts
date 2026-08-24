@@ -5,6 +5,11 @@
 // still into /public/assets/stills/<slug>.jpg (optional — a tuned placeholder
 // shows until then). `trailerUrl` should link to an OFFICIAL host only.
 // `audio` should point to a CLEARED cue in /public/assets/audio/ — never studio footage.
+//
+// `featured: true` puts a credit in the Selected Work index on the home page,
+// in the order the entries appear below. Those entries also want a `clip` —
+// a short silent loop at /public/assets/trailers/<slug>.mp4, built by
+// `npm run clips`. A row without one simply keeps showing its still on hover.
 
 export type Category =
   | "Film"
@@ -37,38 +42,39 @@ export type Project = {
   still?: string; // /assets/stills/<slug>.jpg
   audio?: string; // /assets/audio/<slug>.mp3  (cleared cues only)
   trailerUrl?: string; // official host only
+  clip?: string; // /assets/trailers/<slug>.mp4 — silent hover loop
   // Placeholder tone (0–1) used to tune the graded-frame placeholder.
   tone?: number;
 };
 
 export const projects: Project[] = [
   // — Featured / signature —
-  { slug: "the-odyssey", title: "The Odyssey", category: "Film", studio: "Universal", year: 2026, role: "Trailer Campaign", mood: "Awe", featured: true, tone: 0.62 },
-  { slug: "the-mandalorian-and-grogu", title: "The Mandalorian and Grogu", category: "Film", studio: "Lucasfilm", year: 2026, role: "Trailer Campaign", mood: "Wonder", featured: true, tone: 0.4 },
-  { slug: "nope", title: "NOPE", category: "Horror", studio: "Universal", year: 2022, role: "Trailer Campaign", mood: "Dread", featured: true, tone: 0.3 },
-  { slug: "sinners", title: "Sinners", category: "Horror", studio: "Warner Bros.", year: 2025, role: "Trailer Campaign", mood: "Fury", featured: true, tone: 0.34 },
-  { slug: "killers-of-the-flower-moon", title: "Killers of the Flower Moon", category: "Film", studio: "Apple / Paramount", year: 2023, role: "Trailer Campaign", mood: "Elegy", featured: true, tone: 0.5 },
-  { slug: "barbie", title: "Barbie", category: "Film", studio: "Warner Bros.", year: 2023, role: "Trailer Campaign", mood: "Momentum", featured: true, tone: 0.72 },
+  { slug: "the-revenant", title: "The Revenant", category: "Film", studio: "20th Century", year: 2015, role: "Trailer Campaign", mood: "Awe", featured: true, trailerUrl: "https://www.youtube.com/watch?v=QRfj1VCg16Y", clip: "/assets/trailers/the-revenant.mp4", tone: 0.6 },
+  { slug: "cocaine-bear", title: "Cocaine Bear", category: "Film", studio: "Universal", year: 2023, role: "Trailer Campaign", mood: "Momentum", featured: true, trailerUrl: "https://www.youtube.com/watch?v=DuWEEKeJLMI", clip: "/assets/trailers/cocaine-bear.mp4", tone: 0.4 },
+  { slug: "us", title: "Us", category: "Horror", studio: "Universal", year: 2019, role: "Trailer Campaign", mood: "Dread", featured: true, trailerUrl: "https://www.youtube.com/watch?v=hNCmb-4oXJA", clip: "/assets/trailers/us.mp4", tone: 0.26 },
+  { slug: "john-wick-4", title: "John Wick: Chapter 4", category: "Film", studio: "Lionsgate", year: 2023, role: "Trailer Campaign", mood: "Fury", featured: true, trailerUrl: "https://www.youtube.com/watch?v=qEVUtrk8_B4", clip: "/assets/trailers/john-wick-4.mp4", tone: 0.28 },
+  { slug: "guardians-of-the-galaxy", title: "Guardians of the Galaxy Vol. 3", category: "Superhero", studio: "Marvel", year: 2023, role: "Trailer Campaign", mood: "Triumph", featured: true, trailerUrl: "https://www.youtube.com/watch?v=u3V5KDHRQvk", clip: "/assets/trailers/guardians-of-the-galaxy.mp4", tone: 0.52 },
 
   // — Current slate (Hero columns). Studios/years marked TODO are best guesses
   //   pending confirmation; stills drop in at /public/assets/stills/<slug>.jpg. —
+  { slug: "the-odyssey", title: "The Odyssey", category: "Film", studio: "Universal", year: 2026, role: "Trailer Campaign", mood: "Awe", tone: 0.62 },
+  { slug: "the-mandalorian-and-grogu", title: "The Mandalorian and Grogu", category: "Film", studio: "Lucasfilm", year: 2026, role: "Trailer Campaign", mood: "Wonder", tone: 0.4 },
   { slug: "the-hunger-games", title: "The Hunger Games", category: "Film", studio: "Lionsgate", year: 2026, role: "Trailer Campaign", mood: "Defiance", tone: 0.34 },
   { slug: "the-dog-stars", title: "The Dog Stars", category: "Film", studio: "20th Century", year: 2026, role: "Trailer Campaign", mood: "Solitude", tone: 0.5 }, // TODO: confirm studio
   { slug: "the-end-of-oak-street", title: "The End of Oak Street", category: "Film", studio: "Independent", year: 2025, role: "Trailer Campaign", mood: "Reverie", tone: 0.56 }, // TODO: confirm studio + year
   { slug: "masters-of-the-universe", title: "Masters of the Universe", category: "Film", studio: "Amazon MGM", year: 2026, role: "Trailer Campaign", mood: "Power", tone: 0.44 }, // TODO: confirm studio
 
   // — Film —
-  { slug: "john-wick-4", title: "John Wick: Chapter 4", category: "Film", studio: "Lionsgate", year: 2023, role: "Trailer Campaign", mood: "Fury", tone: 0.28 },
+  { slug: "killers-of-the-flower-moon", title: "Killers of the Flower Moon", category: "Film", studio: "Apple / Paramount", year: 2023, role: "Trailer Campaign", mood: "Elegy", tone: 0.5 },
+  { slug: "barbie", title: "Barbie", category: "Film", studio: "Warner Bros.", year: 2023, role: "Trailer Campaign", mood: "Momentum", tone: 0.72 },
   { slug: "the-irishman", title: "The Irishman", category: "Film", studio: "Netflix", year: 2019, role: "Trailer Campaign", mood: "Elegy", tone: 0.42 },
   { slug: "roma", title: "Roma", category: "Film", studio: "Netflix", year: 2018, role: "Trailer Campaign", mood: "Grief", tone: 0.55 },
-  { slug: "the-revenant", title: "The Revenant", category: "Film", studio: "20th Century", year: 2015, role: "Trailer Campaign", mood: "Awe", tone: 0.6 },
   { slug: "dunkirk", title: "Dunkirk", category: "Film", studio: "Warner Bros.", year: 2017, role: "Trailer Campaign", mood: "Tension", tone: 0.58 },
   { slug: "1917", title: "1917", category: "Film", studio: "Universal", year: 2019, role: "Trailer Campaign", mood: "Tension", tone: 0.44 },
   { slug: "past-lives", title: "Past Lives", category: "Film", studio: "A24", year: 2023, role: "Trailer Campaign", mood: "Reverie", tone: 0.66 },
   { slug: "inception", title: "Inception", category: "Film", studio: "Warner Bros.", year: 2010, role: "Trailer Campaign", mood: "Awe", tone: 0.36 },
   { slug: "mad-max-fury-road", title: "Mad Max: Fury Road", category: "Film", studio: "Warner Bros.", year: 2015, role: "Trailer Campaign", mood: "Fury", tone: 0.7 },
   { slug: "the-trial-of-the-chicago-7", title: "The Trial of the Chicago 7", category: "Film", studio: "Netflix", year: 2020, role: "Trailer Campaign", mood: "Momentum", tone: 0.48 },
-  { slug: "cocaine-bear", title: "Cocaine Bear", category: "Film", studio: "Universal", year: 2023, role: "Trailer Campaign", mood: "Momentum", tone: 0.4 },
   { slug: "the-color-purple", title: "The Color Purple", category: "Film", studio: "Warner Bros.", year: 2023, role: "Trailer Campaign", mood: "Triumph", tone: 0.6 },
   { slug: "glass-onion", title: "Glass Onion: A Knives Out Mystery", category: "Film", studio: "Netflix", year: 2022, role: "Trailer Campaign", mood: "Momentum", tone: 0.58 },
   { slug: "elvis", title: "Elvis", category: "Film", studio: "Warner Bros.", year: 2022, role: "Trailer Campaign", mood: "Rapture", tone: 0.58 },
@@ -83,7 +89,6 @@ export const projects: Project[] = [
   { slug: "the-underground-railroad", title: "The Underground Railroad", category: "Series", studio: "Amazon", year: 2021, role: "Trailer Campaign", mood: "Elegy", tone: 0.4 },
 
   // — Superhero —
-  { slug: "guardians-of-the-galaxy", title: "Guardians of the Galaxy Vol. 3", category: "Superhero", studio: "Marvel", year: 2023, role: "Trailer Campaign", mood: "Triumph", tone: 0.52 },
   { slug: "loki", title: "Loki", category: "Superhero", studio: "Marvel", year: 2021, role: "Trailer Campaign", mood: "Wonder", tone: 0.46 },
   { slug: "wandavision", title: "WandaVision", category: "Superhero", studio: "Marvel", year: 2021, role: "Trailer Campaign", mood: "Reverie", tone: 0.5 },
   { slug: "zack-snyders-justice-league", title: "Zack Snyder's Justice League", category: "Superhero", studio: "Warner Bros.", year: 2021, role: "Trailer Campaign", mood: "Awe", tone: 0.3 },
@@ -91,7 +96,8 @@ export const projects: Project[] = [
   { slug: "the-amazing-spider-man", title: "The Amazing Spider-Man", category: "Superhero", studio: "Sony", year: 2012, role: "Trailer Campaign", mood: "Momentum", tone: 0.48 },
 
   // — Horror —
-  { slug: "us", title: "Us", category: "Horror", studio: "Universal", year: 2019, role: "Trailer Campaign", mood: "Dread", tone: 0.26 },
+  { slug: "nope", title: "NOPE", category: "Horror", studio: "Universal", year: 2022, role: "Trailer Campaign", mood: "Dread", tone: 0.3 },
+  { slug: "sinners", title: "Sinners", category: "Horror", studio: "Warner Bros.", year: 2025, role: "Trailer Campaign", mood: "Fury", tone: 0.34 },
   { slug: "midsommar", title: "Midsommar", category: "Horror", studio: "A24", year: 2019, role: "Trailer Campaign", mood: "Tension", tone: 0.68 },
   { slug: "a-quiet-place", title: "A Quiet Place", category: "Horror", studio: "Paramount", year: 2018, role: "Trailer Campaign", mood: "Tension", tone: 0.36 },
   { slug: "knives-out", title: "Knives Out", category: "Film", studio: "Lionsgate", year: 2019, role: "Trailer Campaign", mood: "Momentum", tone: 0.5 },
