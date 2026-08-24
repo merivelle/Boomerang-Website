@@ -18,8 +18,8 @@ export default function HomePage() {
         <SelectedWorkIndex />
       </section>
 
-      <section id="clients" className="scroll-mt-24 border-y border-line py-16 md:py-20">
-        <div className="gutter mb-8 flex items-end justify-between">
+      <section id="clients" className="scroll-mt-24 border-y border-line py-10 md:py-20">
+        <div className="gutter mb-5 flex items-end justify-between md:mb-8">
           <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
             Clients
           </p>

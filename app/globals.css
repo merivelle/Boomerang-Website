@@ -119,6 +119,16 @@
   animation: glitch 280ms steps(1, end) 1;
 }
 
+/* Hero wordmark fallback. Without background-clip:text the letters would be
+   knocked out to nothing, so give the word its ink back. Every current engine
+   supports the -webkit- form; this is for the one that doesn't. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero-wordmark p {
+    -webkit-text-fill-color: oklch(97% 0 0);
+    background-image: none;
+  }
+}
+
 /* Selected Work index titles.
    The outline is a hover affordance — it means "not the one you're pointing at".
    Touch has no pointer, so idle rows there are dimmed fills instead: an outline

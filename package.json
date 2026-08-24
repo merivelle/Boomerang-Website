@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "placeholders": "node scripts/gen-placeholders.mjs",
-    "clips": "node scripts/gen-clips.mjs"
+    "clips": "node scripts/gen-clips.mjs",
+    "wordmark": "node scripts/gen-wordmark.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

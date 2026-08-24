@@ -56,6 +56,11 @@ const config: Config = {
           from: { transform: "translate3d(0, 0, 0)" },
           to: { transform: "translate3d(-50%, 0, 0)" },
         },
+        // The hero wordmark holds still and the film drifts inside it.
+        "wordmark-drift": {
+          from: { backgroundPositionX: "0%" },
+          to: { backgroundPositionX: "100%" },
+        },
       },
       animation: {
         marquee: "marquee 48s linear infinite",
