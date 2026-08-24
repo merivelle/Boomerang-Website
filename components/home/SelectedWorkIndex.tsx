@@ -23,6 +23,8 @@ function Index() {
   return (
     <HoverIndex
       items={items}
+      // Touch devices can't hover, so the slate walks itself instead.
+      autoCycleMs={4000}
       onSelect={(_item, i) => open(FILMS[i])}
       renderRow={(item, active, i) => (
         <div className="grid grid-cols-[2rem_1fr_auto] items-baseline gap-3 md:gap-6">
@@ -39,11 +41,9 @@ function Index() {
             </span>
             <span className="flex items-center gap-3">
               <span
-                className="text-[clamp(1.1rem,3.4vw,2.1rem)] font-normal uppercase leading-[1.05] tracking-[-0.02em] transition-colors duration-300 ease-signature"
-                style={{
-                  color: active ? "oklch(97% 0 0)" : "transparent",
-                  WebkitTextStroke: active ? "0" : "1px oklch(97% 0 0 / 0.4)",
-                }}
+                className={`text-[clamp(1.1rem,3.4vw,2.1rem)] font-normal uppercase leading-[1.05] tracking-[-0.02em] transition-colors duration-300 ease-signature ${
+                  active ? "index-title" : "index-title-idle"
+                }`}
               >
                 {item.title}
               </span>

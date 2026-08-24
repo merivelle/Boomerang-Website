@@ -8,13 +8,15 @@ import { Still } from "@/components/ui/Still";
 // A stacked-still background that glitch-swaps to match the active row, over a
 // list whose active row is solid and whose others are ghosted by the caller.
 //
-// Used twice: films (hover → its trailer loop) and studios (hover → its films).
 // The row content is the caller's job; this owns active state, the background
 // crossfade + glitch, keyboard, and the SSR-safe default.
 //
 // An item may carry a `bgClip` — a silent looping trailer clip that plays over
-// its still while the row is active. Items without one behave exactly as before,
-// which is what keeps the studios list untouched.
+// its still while the row is active.
+//
+// Hover is the whole interaction here, so a touch device would otherwise see one
+// still and never learn the rest exist. `autoCycleMs` is the answer: on a device
+// with no pointer, the active row advances on a timer instead.
 export type IndexItem = {
   key: string;
   bgSlug: string;
@@ -30,6 +32,7 @@ export function HoverIndex<T extends IndexItem>({
   onSelect,
   className,
   minHeight = "min-h-[400px] md:min-h-[460px]",
+  autoCycleMs,
 }: {
   items: T[];
   renderRow: (item: T, active: boolean, index: number) => React.ReactNode;
@@ -40,6 +43,9 @@ export function HoverIndex<T extends IndexItem>({
   // The stage sizes to its rows; this floor keeps a short list cinematic. A long
   // list (all studios) simply grows past it — never clips.
   minHeight?: string;
+  // Advance the active row on a timer, but only where there is no pointer to
+  // hover with. Opt-in: a long list has no business cycling itself.
+  autoCycleMs?: number;
 }) {
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
@@ -52,10 +58,29 @@ export function HoverIndex<T extends IndexItem>({
   // A clip only fades up once it is actually playing, so a missing or
   // undecodable file leaves the still in place instead of a black rectangle.
   const [playing, setPlaying] = useState<number[]>([]);
+  // Whether the stage is on screen. One observer, hoisted to state, because both
+  // clip playback and the auto-cycle need the answer.
+  const [visible, setVisible] = useState(true);
+  // Auto-advances skip the glitch — see the glitch effect below.
+  const autoAdvanced = useRef(false);
 
+  // Two forms of the same question, deliberately.
+  // `canHover()` answers it at event time, which is what the row handlers want.
+  // `fine` answers it during render, which is what the cycle needs — and it
+  // starts null rather than false so a desktop never briefly cycles before the
+  // effect resolves it.
   const canHover = () =>
     typeof window !== "undefined" &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  const [fine, setFine] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setFine(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const activate = (i: number) => {
     if (i === active) return;
@@ -79,8 +104,14 @@ export function HoverIndex<T extends IndexItem>({
   };
 
   // Fire the glitch on the newly-active frame, then strip it so the settled
-  // frame keeps no red fringe. Skipped entirely under reduced motion.
+  // frame keeps no red fringe. Skipped entirely under reduced motion, and on
+  // auto-advance: a 280ms stutter every few seconds unprompted is a strobe, not
+  // a signature. Deliberate hover still gets it.
   useEffect(() => {
+    if (autoAdvanced.current) {
+      autoAdvanced.current = false;
+      return;
+    }
     if (reduced) return;
     const el = bgRefs.current[active];
     if (!el) return;
@@ -91,37 +122,47 @@ export function HoverIndex<T extends IndexItem>({
     return () => clearTimeout(t);
   }, [active, reduced]);
 
-  // Only the active clip runs. The rest rewind so a re-hover starts on the
-  // frame the cut was designed to open on.
+  // Track visibility once. This used to live inside the playback effect with
+  // `active` in its deps, which rebuilt the observer on every activation — fine
+  // for hover, but a new observer every tick once the cycle is running.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Only the active clip runs, and only while the stage is on screen. The rest
+  // rewind so a re-hover starts on the frame the cut was designed to open on.
   useEffect(() => {
     videoRefs.current.forEach((el, i) => {
       if (!el) return;
-      if (i === active && !reduced) {
+      if (i === active && !reduced && visible) {
         el.currentTime = 0;
         el.play().catch(() => {});
       } else {
         el.pause();
       }
     });
-  }, [active, mounted, reduced]);
+  }, [active, mounted, reduced, visible]);
 
-  // Nothing keeps decoding once the stage has scrolled away.
+  // With no pointer, hover can't reveal the other films — so walk them. Stills
+  // only: `mount()` still refuses to fetch a clip on a touch device, so this
+  // moves the crossfade and nothing downloads.
   useEffect(() => {
-    const el = stageRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        videoRefs.current.forEach((v, i) => {
-          if (!v) return;
-          if (!entry.isIntersecting) v.pause();
-          else if (i === active && !reduced) v.play().catch(() => {});
-        });
-      },
-      { threshold: 0 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [active, reduced]);
+    if (!autoCycleMs || reduced || fine !== false || !visible) return;
+    if (items.length < 2) return;
+    const id = setInterval(() => {
+      autoAdvanced.current = true;
+      // Not activate(): onActivate means "the visitor chose this row".
+      setActive((i) => (i + 1) % items.length);
+    }, autoCycleMs);
+    return () => clearInterval(id);
+  }, [autoCycleMs, reduced, fine, visible, items.length]);
 
   return (
     <div

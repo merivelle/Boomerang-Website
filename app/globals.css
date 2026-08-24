@@ -119,6 +119,26 @@
   animation: glitch 280ms steps(1, end) 1;
 }
 
+/* Selected Work index titles.
+   The outline is a hover affordance — it means "not the one you're pointing at".
+   Touch has no pointer, so idle rows there are dimmed fills instead: an outline
+   at 17.6px over a photograph is barely readable on a phone, a 45% fill is.
+   Pointer devices keep the outline exactly as designed. */
+.index-title {
+  color: oklch(97% 0 0);
+  -webkit-text-stroke: 0;
+}
+.index-title-idle {
+  color: oklch(97% 0 0 / 0.45);
+  -webkit-text-stroke: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  .index-title-idle {
+    color: transparent;
+    -webkit-text-stroke: 1px oklch(97% 0 0 / 0.4);
+  }
+}
+
 /* Reduced motion means fewer and gentler animations, not zero.
    Keep opacity and colour transitions — they aid comprehension.
    Remove movement. A blanket `*{0.01ms !important}` would also strand
