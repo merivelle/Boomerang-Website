@@ -56,10 +56,13 @@ const config: Config = {
           from: { transform: "translate3d(0, 0, 0)" },
           to: { transform: "translate3d(-50%, 0, 0)" },
         },
-        // The hero wordmark holds still and the film drifts inside it.
-        "wordmark-drift": {
-          from: { backgroundPositionX: "0%" },
-          to: { backgroundPositionX: "100%" },
+        // The hero wordmark's second triptych, dissolved in and back out.
+        // 12.4s: 5s hold, 1.2s blend, 5s hold, 1.2s blend. Opacity only — the
+        // imagery never moves.
+        "wordmark-dissolve": {
+          "0%, 40.3%": { opacity: "0" },
+          "50%, 90.3%": { opacity: "1" },
+          "100%": { opacity: "0" },
         },
       },
       animation: {
