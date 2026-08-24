@@ -14,7 +14,7 @@ export function Footer() {
           </p>
           <a
             href={site.contact.phoneHref}
-            className="mt-3 block font-mono text-sm tabular-nums text-muted transition-colors duration-hover ease-out hover:text-text"
+            className="mt-1 inline-flex min-h-11 items-center font-mono text-sm tabular-nums text-muted transition-colors duration-hover ease-out hover:text-text"
           >
             {site.contact.phone}
           </a>
@@ -27,7 +27,7 @@ export function Footer() {
             href={site.contact.instagramHref}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 block text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
+            className="mt-1 inline-flex min-h-11 items-center text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
           >
             @{site.contact.instagram}
           </a>
@@ -41,7 +41,7 @@ export function Footer() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
+                  className="inline-flex min-h-11 items-center text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
                 >
                   {item.label}
                 </Link>

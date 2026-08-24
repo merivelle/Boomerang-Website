@@ -26,12 +26,12 @@ function Index() {
       onSelect={(_item, i) => open(FILMS[i])}
       renderRow={(item, active, i) => (
         <div className="grid grid-cols-[2rem_1fr_auto] items-baseline gap-3 md:gap-6">
-          <span className="font-mono text-[0.62rem] tabular-nums text-faint">
+          <span className="font-mono text-[0.7rem] tabular-nums text-faint md:text-[0.62rem]">
             {String(i + 1).padStart(2, "0")}
           </span>
           <span>
             <span
-              className={`block font-mono text-[0.5rem] uppercase tracking-[0.16em] text-faint transition-opacity duration-300 ease-signature ${
+              className={`block font-mono text-[0.7rem] uppercase tracking-[0.16em] text-faint md:text-[0.5rem] transition-opacity duration-300 ease-signature ${
                 active ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -56,7 +56,7 @@ function Index() {
               </span>
             </span>
           </span>
-          <span className="text-right font-mono text-[0.58rem] uppercase leading-snug tracking-[0.12em] text-faint">
+          <span className="text-right font-mono text-[0.7rem] uppercase leading-snug tracking-[0.12em] text-faint md:text-[0.58rem]">
             {item.studio}
             <br />
             <span className="tabular-nums">{item.year}</span>
@@ -74,7 +74,7 @@ export function SelectedWorkIndex() {
         <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
           Selected work
         </p>
-        <p className="font-mono text-[0.58rem] uppercase tracking-[0.14em] text-faint">
+        <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint md:text-[0.58rem]">
           Click to watch
         </p>
       </div>

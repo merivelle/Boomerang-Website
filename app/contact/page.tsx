@@ -64,7 +64,7 @@ export default async function ContactPage({
               <a
                 href={r.href}
                 {...(r.external ? { target: "_blank", rel: "noreferrer" } : {})}
-                className={`text-sm uppercase tracking-[-0.01em] text-text transition-colors duration-hover ease-out hover:text-muted md:text-lg ${
+                className={`inline-flex min-h-11 items-center text-sm uppercase tracking-[-0.01em] text-text transition-colors duration-hover ease-out hover:text-muted md:text-lg ${
                   r.label === "Phone" ? "font-mono tabular-nums normal-case" : ""
                 }`}
               >

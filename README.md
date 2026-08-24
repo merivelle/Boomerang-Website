@@ -10,30 +10,33 @@ npm run build    # production build
 
 ## Contact form email
 
-The contact form (`/contact`) posts to `app/api/contact/route.ts`, which sends the message over **SMTP** using [Nodemailer](https://nodemailer.com). SMTP just means "the login your website uses to send email" — the same host / port / username / password an email app needs. Until these are set, the form replies **"Email isn't configured yet."**
+The contact form (`/contact`) posts to `app/api/contact/route.ts`, which sends the message with [Resend](https://resend.com) — a transactional email service. Until the keys below are set, the form replies **"Email isn't configured yet."**
 
-### Settings (Bluehost cPanel mailbox `info@boomerang-music.com`)
+This used to go over Bluehost SMTP with Nodemailer. That could never work from the deployed site: shared Bluehost plans block SMTP from outside servers like Vercel. Resend is designed to be called from a serverless function, so that failure mode is gone.
 
-| Variable | Value |
-| --- | --- |
-| `SMTP_HOST` | `mail.boomerang-music.com` |
-| `SMTP_PORT` | `465` |
-| `SMTP_SECURE` | `true` |
-| `SMTP_USER` | `info@boomerang-music.com` |
-| `SMTP_PASS` | the mailbox password (see below) |
-| `CONTACT_TO` | `info@boomerang-music.com` (where submissions land) |
-| `CONTACT_FROM` | `info@boomerang-music.com` (optional) |
+### Settings
 
-**Getting the password:** it's the password for the `info@boomerang-music.com` mailbox. In Bluehost → **cPanel → Email Accounts** → find `info@boomerang-music.com` → **Manage** → set (or reset) the password. That value is `SMTP_PASS`.
+| Variable | Value | Required |
+| --- | --- | --- |
+| `RESEND_API_KEY` | the API key from resend.com | yes |
+| `CONTACT_TO` | `info@boomerang-music.com` (where submissions land) | yes |
+| `CONTACT_FROM` | an address on a Resend-verified domain | no |
 
-### Where the values go
+### One-time setup
 
-- **Local dev:** create a `.env.local` file in the project root (copy `.env.example`), fill in the values, then restart `npm run dev`.
-- **Production (Vercel):** Project → **Settings → Environment Variables** → add each key → **redeploy**.
+1. Create an account at [resend.com](https://resend.com) (the free tier covers a portfolio site).
+2. **Add the domain** `boomerang-music.com` under **Domains**, and add the DNS records Resend gives you at your registrar. Sending stays restricted until the domain shows **Verified**.
+3. **Create an API key** under **API Keys** and copy it — it's shown once.
+4. Put it in `.env.local` for local dev, and in Vercel → **Settings → Environment Variables** → then **redeploy**.
+5. Set `CONTACT_FROM` to an address on the verified domain, e.g. `info@boomerang-music.com`.
 
-`SMTP_PASS` is a secret: keep it only in `.env.local` (git-ignored) and Vercel. Never commit it.
+**Before the domain is verified:** leave `CONTACT_FROM` blank. The route falls back to Resend's shared `onboarding@resend.dev` sender, which can only deliver to the email address that owns the Resend account. That's enough to prove the wiring works, but it is not a live configuration.
 
-### Bluehost caveats
+`RESEND_API_KEY` is a secret: keep it only in `.env.local` (git-ignored) and Vercel. Never commit it.
 
-- **Port fallback:** if `mail.boomerang-music.com` throws a TLS-certificate error, use `SMTP_PORT=587` with `SMTP_SECURE=false`.
-- **Remote sending:** some shared Bluehost plans block SMTP from outside servers (like Vercel). If sends fail from the deployed site even with correct credentials, that's the host restricting remote SMTP — the fix is to switch to a transactional email service (e.g. Resend/SendGrid); the route code stays the same, only the host/credentials change.
+### Behaviour
+
+- Honeypot: a hidden `company` field. If it's filled, the route returns `200` and sends nothing.
+- Validation is server-side (`name`, `message`, and a well-formed `email` are required) and returns `400`.
+- A send failure returns `502` and logs the underlying cause to the Vercel function logs.
+- There is no rate limiting. The honeypot is the only spam defense.

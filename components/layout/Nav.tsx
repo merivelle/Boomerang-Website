@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { site } from "@/content/site";
 
 export function Nav() {
@@ -11,8 +11,26 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const home = pathname === "/";
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => setOpen(false), [pathname]);
+
+  // Escape closes the drawer and hands focus back to the button that opened it.
+  // No focus trap: this is a disclosure panel, not a modal — the page behind it
+  // stays live, and trapping would be the wrong affordance. What it does need is
+  // for focus to land inside on open, which `inert` alone won't do.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      toggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    drawerRef.current?.querySelector("a")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   // On the homepage the hero renders its own oversized mark, so the nav's copy
   // stays hidden until you scroll past it — then it takes over as the header.
@@ -34,7 +52,7 @@ export function Nav() {
           aria-label="Boomerang — home"
           tabIndex={showMark ? undefined : -1}
           aria-hidden={!showMark}
-          className={`transition-opacity duration-300 ease-out ${
+          className={`-mx-2 inline-flex min-h-11 items-center px-2 transition-opacity duration-300 ease-out ${
             showMark ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
@@ -55,7 +73,7 @@ export function Nav() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors duration-hover ease-out ${
+                  className={`inline-flex min-h-11 items-center font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors duration-hover ease-out ${
                     active ? "text-text" : "text-muted hover:text-text"
                   }`}
                 >
@@ -67,10 +85,12 @@ export function Nav() {
         </ul>
 
         <button
+          ref={toggleRef}
           onClick={() => setOpen((v) => !v)}
           className="-mr-2 flex h-11 w-11 items-center justify-center md:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
+          aria-controls="mobile-nav"
         >
           <span className="relative block h-3 w-6">
             <span
@@ -87,7 +107,13 @@ export function Nav() {
         </button>
       </nav>
 
+      {/* `inert` when collapsed: max-height hides the panel visually, but the
+          links stay in the tab order without it — a keyboard user tabs into
+          four invisible destinations. */}
       <div
+        id="mobile-nav"
+        ref={drawerRef}
+        inert={!open}
         className={`pointer-events-auto overflow-hidden bg-ink transition-[max-height] duration-500 ease-signature md:hidden ${
           open ? "max-h-80" : "max-h-0"
         }`}

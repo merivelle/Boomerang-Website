@@ -28,6 +28,20 @@ function Columns() {
   const [active, setActive] = useState<number | null>(null);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
 
+  // Below md the columns become a swipeable strip, so the flex-grow expansion
+  // has to switch off. It's an inline style driven by state, which no
+  // responsive class can reach — hence a matchMedia subscription rather than a
+  // `md:` utility. SSR-safe: starts false, so the server renders the strip and
+  // the desktop layout arrives on hydration.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const canHover = () =>
     typeof window !== "undefined" &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -46,7 +60,7 @@ function Columns() {
   }, [active, enabled]);
 
   return (
-    <div className="flex h-[calc(100*var(--vh))] w-full gap-[2px] bg-line">
+    <div className="flex h-[calc(100*var(--vh))] w-full snap-x snap-mandatory gap-[2px] overflow-x-auto overscroll-x-contain bg-line md:snap-none md:overflow-x-hidden">
       {COLUMNS.map((p, i) => {
         const hot = active === i;
         const playing = hot && enabled && !!p.audio;
@@ -60,13 +74,26 @@ function Columns() {
             onMouseLeave={() => setActive(null)}
             onFocus={() => setActive(i)}
             onBlur={() => setActive(null)}
-            style={{ flexGrow: hot ? 2.6 : active === null ? 1 : 0.7 }}
-            className="group relative block min-w-0 basis-0 overflow-hidden text-left outline-none transition-[flex-grow] duration-[600ms] ease-signature focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text"
+            // `md:flex-1` is the resting desktop layout, in CSS, so equal
+            // columns survive even if this never hydrates. The inline style
+            // only takes over once a column is actually hovered — which is the
+            // only thing that genuinely needs JS.
+            style={
+              wide && active !== null
+                ? { flexGrow: hot ? 2.6 : 0.7 }
+                : undefined
+            }
+            className="group relative block w-[82vw] shrink-0 snap-center overflow-hidden text-left outline-none transition-[flex-grow] duration-[600ms] ease-signature focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text md:w-auto md:min-w-0 md:flex-1 md:snap-align-none"
           >
             {/* Ambient drift frame — slightly oversized so the pan never shows edges. */}
             <div
+              // Full colour is the base state. The desaturated resting look is
+              // the hover affordance, so it only applies where hover exists —
+              // otherwise a phone shows six permanently grey stills.
               className={`absolute inset-[-6%] transition-[filter] duration-500 ease-signature ${
-                hot ? "saturate-100 brightness-100" : "saturate-[0.18] brightness-[0.62]"
+                hot
+                  ? "saturate-100 brightness-100"
+                  : "can-hover:saturate-[0.18] can-hover:brightness-[0.62]"
               }`}
             >
               <div
@@ -86,16 +113,18 @@ function Columns() {
 
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-ink/20" />
 
+            {/* On touch there is no hover to reveal the caption with, so it
+                stays visible; pointer devices keep the fade-up. */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 md:p-5">
               <div
                 className={`transition-opacity duration-500 ease-out ${hot ? "opacity-100" : "opacity-0"}`}
               >
                 <Waveform bars={12} height={14} active={hot} playing={playing} />
               </div>
-              <h2 className="mt-3 truncate text-sm uppercase tracking-[-0.01em] text-text md:text-base">
+              <h2 className="mt-3 text-base uppercase tracking-[-0.01em] text-text md:truncate md:text-base">
                 {p.title}
               </h2>
-              <p className="mt-1 truncate font-mono text-[0.58rem] uppercase tracking-[0.14em] text-muted">
+              <p className="mt-1 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-muted md:truncate md:text-[0.58rem]">
                 {p.studio}
               </p>
             </div>

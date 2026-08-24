@@ -25,7 +25,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/clients"
-            className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted transition-colors duration-hover ease-out hover:text-text"
+            className="inline-flex min-h-11 items-center font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted transition-colors duration-hover ease-out hover:text-text"
           >
             Full roster →
           </Link>

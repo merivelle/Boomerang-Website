@@ -8,8 +8,11 @@ import { useState } from "react";
 const row =
   "grid grid-cols-[5.5rem_1fr] items-baseline gap-5 border-t border-line py-5 md:grid-cols-[12rem_1fr] md:py-6";
 const label = "font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint";
+// text-base pins the mobile size at 16px. iOS Safari auto-zooms on focus for
+// anything smaller, and inheriting body size left that one font-size change
+// away from breaking.
 const input =
-  "w-full bg-transparent text-text placeholder:text-faint focus:outline-none md:text-lg";
+  "w-full bg-transparent text-base text-text placeholder:text-faint focus:outline-none md:text-lg";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -46,7 +49,11 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
 
   if (status === "sent") {
     return (
-      <p className="border-t border-line pt-8 text-lg leading-relaxed text-text">
+      <p
+        className="border-t border-line pt-8 text-lg leading-relaxed text-text"
+        role="status"
+        aria-live="polite"
+      >
         Thanks — your message is on its way. We&rsquo;ll be in touch shortly.
       </p>
     );
@@ -64,6 +71,10 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
           id="cf-email"
           type="email"
           required
+          autoComplete="email"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={input}
@@ -78,6 +89,8 @@ export function ContactForm({ initialEmail }: { initialEmail?: string }) {
         <input
           id="cf-name"
           required
+          autoComplete="name"
+          autoCapitalize="words"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className={input}

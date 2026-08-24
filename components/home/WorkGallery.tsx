@@ -48,7 +48,7 @@ export function WorkGallery() {
       <div className="gutter mt-8 flex justify-end">
         <Link
           href="/work"
-          className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted transition-colors duration-hover ease-out hover:text-text"
+          className="inline-flex min-h-11 items-center font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted transition-colors duration-hover ease-out hover:text-text"
         >
           View all work →
         </Link>

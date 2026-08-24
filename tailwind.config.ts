@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
@@ -61,7 +62,15 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // The CSS mirror of the `canHover()` guard that HeroC, WorkCard and
+    // HoverIndex each run in JS. Reveal-on-hover captions key off input
+    // capability, not viewport width — a touch device gets the caption
+    // outright, because it has no way to hover for it.
+    plugin(({ addVariant }) => {
+      addVariant("can-hover", "@media (hover: hover) and (pointer: fine)");
+    }),
+  ],
 };
 
 export default config;

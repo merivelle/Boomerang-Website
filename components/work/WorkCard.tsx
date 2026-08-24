@@ -70,9 +70,11 @@ export function WorkCard({
           className={[
             // Named properties only — never `transition-all`.
             "transition-[filter,transform] duration-hover ease-signature",
+            // As in the hero: the desaturated rest state is a hover affordance,
+            // so touch devices get the frames at full colour instead.
             hot
               ? "saturate-100 brightness-100 scale-[1.03]"
-              : "saturate-[0.25] brightness-[0.8] scale-100",
+              : "scale-100 can-hover:saturate-[0.25] can-hover:brightness-[0.8]",
           ].join(" ")}
         />
 
@@ -83,17 +85,21 @@ export function WorkCard({
           }`}
         />
 
-        {/* Caption fades up on hover/focus */}
+        {/* Caption fades up on hover/focus — but only where hover exists. On a
+            touch device `hot` never turns on, and hiding it there left the whole
+            grid reading as unlabelled images. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
           <div
             className={`transition-[opacity,transform] duration-hover ease-signature ${
-              hot ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+              hot
+                ? "translate-y-0 opacity-100"
+                : "can-hover:translate-y-1 can-hover:opacity-0"
             }`}
           >
             <h3 className="text-sm uppercase leading-tight tracking-[-0.01em] text-text">
               {project.title}
             </h3>
-            <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted">
+            <p className="mt-1 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted md:text-[0.62rem]">
               {project.studio} · <span className="tabular-nums">{project.year}</span>
             </p>
           </div>

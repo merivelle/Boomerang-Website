@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { site } from "@/content/site";
@@ -30,6 +30,16 @@ export const metadata: Metadata = {
     description: site.intro,
     type: "website",
   },
+};
+
+// The site is dark-only, so without themeColor iOS Safari paints its chrome
+// light and the page reads as a dark rectangle inside a white frame.
+// viewportFit lets the hero run under the notch on the devices that have one.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0b0b0b",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
