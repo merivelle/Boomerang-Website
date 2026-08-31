@@ -1,17 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CATEGORIES,
-  OSCAR_FILTER,
-  OSCAR_SLUGS,
-  type Project,
-} from "@/content/projects";
+import type { Category, Project, Tag } from "@/lib/cms/types";
 import { WorkCard } from "./WorkCard";
 import { SoundProvider } from "./SoundContext";
 import { useLightbox } from "@/components/media/LightboxProvider";
 
 const STEP = 12;
+
+// One chip row over two kinds of filter. A category is 1:1 with a credit; a tag
+// cuts across categories (Oscar Nominees today, and site.ts already hints at a
+// Clio set next). Modelling both as chips means WorkExplorer no longer
+// special-cases one filter by name.
+type Filter =
+  | { label: "All"; kind: "all" }
+  | { label: string; kind: "category" }
+  | { label: string; kind: "tag"; slug: string };
 
 function IndexRow({ project }: { project: Project }) {
   const { open } = useLightbox();
@@ -34,16 +38,34 @@ function IndexRow({ project }: { project: Project }) {
   );
 }
 
-export function WorkExplorer({ projects }: { projects: Project[] }) {
+export function WorkExplorer({
+  projects,
+  categories,
+  tags,
+}: {
+  projects: Project[];
+  categories: Category[];
+  tags: Tag[];
+}) {
   const [cat, setCat] = useState<string>("All");
   const [view, setView] = useState<"grid" | "index">("grid");
   const [count, setCount] = useState(STEP);
 
+  const filters = useMemo<Filter[]>(
+    () => [
+      { label: "All", kind: "all" },
+      ...categories.map((c) => ({ label: c.label, kind: "category" as const })),
+      ...tags.map((t) => ({ label: t.label, kind: "tag" as const, slug: t.slug })),
+    ],
+    [categories, tags],
+  );
+
   const filtered = useMemo(() => {
-    if (cat === "All") return projects;
-    if (cat === OSCAR_FILTER) return projects.filter((p) => OSCAR_SLUGS.has(p.slug));
-    return projects.filter((p) => p.category === cat);
-  }, [cat, projects]);
+    const f = filters.find((x) => x.label === cat);
+    if (!f || f.kind === "all") return projects;
+    if (f.kind === "tag") return projects.filter((p) => p.tags.includes(f.slug));
+    return projects.filter((p) => p.category === f.label);
+  }, [cat, filters, projects]);
   const visible = view === "index" ? filtered : filtered.slice(0, count);
 
   return (
@@ -51,18 +73,18 @@ export function WorkExplorer({ projects }: { projects: Project[] }) {
       <div className="sticky top-16 z-30 -mx-[var(--gutter)] mb-8 border-y border-line bg-ink/90 px-[var(--gutter)] py-4 backdrop-blur-sm md:top-20">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {["All", ...CATEGORIES, OSCAR_FILTER].map((c) => (
+            {filters.map((f) => (
               <button
-                key={c}
+                key={f.label}
                 onClick={() => {
-                  setCat(c);
+                  setCat(f.label);
                   setCount(STEP);
                 }}
                 className={`font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors duration-hover ease-out ${
-                  cat === c ? "text-text" : "text-faint hover:text-muted"
+                  cat === f.label ? "text-text" : "text-faint hover:text-muted"
                 }`}
               >
-                {c}
+                {f.label}
               </button>
             ))}
           </div>

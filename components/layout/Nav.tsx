@@ -4,9 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { site } from "@/content/site";
+import type { NavItem } from "@/lib/cms/types";
 
-export function Nav() {
+export function Nav({ nav }: { nav: NavItem[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
@@ -67,7 +67,7 @@ export function Nav() {
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
-          {site.nav.map((item) => {
+          {nav.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <li key={item.href}>
@@ -119,7 +119,7 @@ export function Nav() {
         }`}
       >
         <ul className="gutter flex flex-col py-4">
-          {site.nav.map((item) => (
+          {nav.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}

@@ -38,12 +38,12 @@ const CROP_ASPECT = (CELL_W / CELL_H).toFixed(4); // 0.75
 
 const GRADE = "eq=brightness=0.16:contrast=1.45:saturation=1.10";
 
-// Read the slate from HeroC rather than keeping a second copy of it here — the
-// strip must always be the films the hero actually shows.
+// Read the slate from content/projects.ts rather than keeping a second copy of
+// it here — the strip must always be the films the hero actually shows.
 function heroSlugs() {
-  const src = readFileSync(join(ROOT, "components", "home", "HeroC.tsx"), "utf8");
-  const block = src.match(/const HERO_SLUGS = \[([\s\S]*?)\]/);
-  if (!block) throw new Error("HERO_SLUGS not found in components/home/HeroC.tsx");
+  const src = readFileSync(join(ROOT, "content", "projects.ts"), "utf8");
+  const block = src.match(/export const HERO_SLUGS = \[([\s\S]*?)\]/);
+  if (!block) throw new Error("HERO_SLUGS not found in content/projects.ts");
   return [...block[1].matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1]);
 }
 

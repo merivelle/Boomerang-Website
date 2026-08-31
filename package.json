@@ -9,11 +9,15 @@
     "lint": "next lint",
     "placeholders": "node scripts/gen-placeholders.mjs",
     "clips": "node scripts/gen-clips.mjs",
-    "wordmark": "node scripts/gen-wordmark.mjs"
+    "wordmark": "node scripts/gen-wordmark.mjs",
+    "migrate": "node scripts/migrate-to-supabase.ts",
+    "verify:migration": "node scripts/verify-migration.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.112.4",
     "gsap": "^3.15.0",
     "lenis": "1.1.18",
     "motion": "11.18.0",
@@ -21,6 +25,8 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "resend": "^6.22.0",
+    "server-only": "^0.0.1",
+    "sharp": "^0.33.5",
     "three": "^0.171.0"
   },
   "devDependencies": {
@@ -30,7 +36,6 @@
     "autoprefixer": "10.4.20",
     "postcss": "8.5.1",
     "potrace": "^2.1.8",
-    "sharp": "0.33.5",
     "tailwindcss": "3.4.17",
     "typescript": "5.7.3"
   }

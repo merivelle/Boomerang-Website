@@ -173,3 +173,47 @@
     transition-duration: 200ms !important;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Admin chrome.
+
+   Everything here is scoped under .admin-root, which the public pages never
+   render. The site's design system — the oklch ramp, the fluid type scale, the
+   signature easing — stays exactly as it was; this only undoes the global body
+   rules that make sense for a dark cinematic site and not for a form.
+   ─────────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .admin-root {
+    @apply bg-zinc-50 text-zinc-900;
+    line-height: 1.5;
+    letter-spacing: 0;
+    min-height: 100vh;
+  }
+
+  /* The site hides scrollbars globally. A long credit list needs them back. */
+  .admin-root ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  .admin-root ::-webkit-scrollbar-thumb {
+    @apply rounded-full border-[3px] border-solid border-transparent bg-zinc-300 bg-clip-content;
+  }
+  .admin-root ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-400 bg-clip-content;
+  }
+
+  .admin-root :focus-visible {
+    outline: 2px solid theme("colors.zinc.900");
+    outline-offset: 2px;
+  }
+
+  /* One label style, so every field and column header reads the same. */
+  .admin-label {
+    @apply font-mono text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500;
+  }
+
+  .admin-input {
+    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-[0.95rem] text-zinc-900
+           placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900;
+  }
+}

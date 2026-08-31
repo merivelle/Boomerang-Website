@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { site } from "@/content/site";
-import { LenisProvider } from "@/components/motion/LenisProvider";
-import { ViewportUnit } from "@/components/motion/ViewportUnit";
-import { PageTransition } from "@/components/motion/PageTransition";
-import { Preloader } from "@/components/home/Preloader";
-import { Nav } from "@/components/layout/Nav";
-import { Footer } from "@/components/layout/Footer";
+import { getSite } from "@/lib/cms/queries";
 
 // One family, one voice. Geist is the closest open face to Neue Montreal /
 // Aeonik, and unlike Inter or DM Sans it isn't on the reflex-reject list.
@@ -18,19 +12,37 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://www.boomerang-music.com"),
-  title: {
-    default: `${site.name} — Trailer Music, Scoring & Sound Design`,
-    template: `%s — ${site.name}`,
-  },
-  description: site.intro,
-  openGraph: {
-    title: `${site.name} — ${site.founder}`,
+const FALLBACK_ORIGIN = "https://www.boomerang-music.com";
+
+/**
+ * metadataBase now comes from the database, which makes one editable field
+ * capable of breaking every canonical and OG URL on the site with no build
+ * error. Validate it and fall back rather than trusting the row.
+ */
+function origin(url: string): URL {
+  try {
+    return new URL(url);
+  } catch {
+    return new URL(FALLBACK_ORIGIN);
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSite();
+  return {
+    metadataBase: origin(site.canonicalUrl),
+    title: {
+      default: `${site.name} — Trailer Music, Scoring & Sound Design`,
+      template: `%s — ${site.name}`,
+    },
     description: site.intro,
-    type: "website",
-  },
-};
+    openGraph: {
+      title: `${site.name} — ${site.founder}`,
+      description: site.intro,
+      type: "website",
+    },
+  };
+}
 
 // The site is dark-only, so without themeColor iOS Safari paints its chrome
 // light and the page reads as a dark rectangle inside a white frame.
@@ -48,13 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* Browser extensions (Grammarly, etc.) inject attributes on <body> before
           React hydrates; suppress the resulting dev-only hydration warning. */}
       <body className="min-h-screen" suppressHydrationWarning>
-        <ViewportUnit />
-        <Preloader />
-        <LenisProvider>
-          <Nav />
-          <PageTransition>{children}</PageTransition>
-          <Footer />
-        </LenisProvider>
+        {children}
       </body>
     </html>
   );

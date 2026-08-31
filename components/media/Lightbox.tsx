@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import type { Project } from "@/content/projects";
+import type { Project } from "@/lib/cms/types";
 import { youTubeEmbed } from "@/lib/youtube";
 
 // The click target for a film. If the project has an official trailer URL, embed
@@ -94,7 +94,7 @@ export function Lightbox({
       ) : (
         <figure className="relative flex h-full max-h-[88vh] w-full max-w-[92vw] items-center justify-center">
           <Image
-            src={`/assets/stills/${project.slug}.jpg`}
+            src={project.still ?? `/assets/stills/${project.slug}.jpg`}
             alt={project.title}
             fill
             sizes="92vw"

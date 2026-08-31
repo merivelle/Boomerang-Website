@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { site } from "@/content/site";
+import type { NavItem, SiteSettings } from "@/lib/cms/types";
 
-export function Footer() {
+export function Footer({ site, nav }: { site: SiteSettings; nav: NavItem[] }) {
   return (
     <footer className="gutter border-t border-line pb-8 pt-16">
       {/* No tagline. The only display word on the page is the company's name. */}
@@ -13,10 +13,10 @@ export function Footer() {
             Contact
           </p>
           <a
-            href={site.contact.phoneHref}
+            href={site.phoneHref ?? "#"}
             className="mt-1 inline-flex min-h-11 items-center font-mono text-sm tabular-nums text-muted transition-colors duration-hover ease-out hover:text-text"
           >
-            {site.contact.phone}
+            {site.phone}
           </a>
         </div>
         <div>
@@ -24,12 +24,12 @@ export function Footer() {
             Elsewhere
           </p>
           <a
-            href={site.contact.instagramHref}
+            href={site.instagramUrl ?? "#"}
             target="_blank"
             rel="noreferrer"
             className="mt-1 inline-flex min-h-11 items-center text-sm text-muted transition-colors duration-hover ease-out hover:text-text"
           >
-            @{site.contact.instagram}
+            @{site.instagramHandle}
           </a>
         </div>
         <div>
@@ -37,7 +37,7 @@ export function Footer() {
             Index
           </p>
           <ul className="mt-3 space-y-1">
-            {site.nav.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -52,7 +52,7 @@ export function Footer() {
       </div>
 
       <p className="mt-12 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-faint">
-        © <span className="tabular-nums">2026</span> Boomerang Music
+        © <span className="tabular-nums">{site.copyrightYear}</span> {site.name} Music
       </p>
     </footer>
   );

@@ -1,31 +1,37 @@
 import type { Metadata } from "next";
-import { site } from "@/content/site";
+import { getSite, seoMetadata } from "@/lib/cms/queries";
 import { ContactForm } from "@/components/contact/ContactForm";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Start a conversation with Boomerang Music.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata("/contact", {
+    title: "Contact",
+    description: "Start a conversation with Boomerang Music.",
+  });
+}
 
 // Editorial contact layout: a giant CONTACT wordmark, then the message form as
-// label→field rows (email / name / message), then phone + Instagram below. The
-// email is never displayed — it's reachable only by submitting the form.
-const infoRows: { label: string; value: string; href: string; external?: boolean }[] = [
-  { label: "Phone", value: site.contact.phone, href: site.contact.phoneHref },
-  {
-    label: "Instagram",
-    value: `@${site.contact.instagram}`,
-    href: site.contact.instagramHref,
-    external: true,
-  },
-];
-
+// label→field rows (email / name / message), then phone + Instagram below.
+//
+// The address is still never rendered, and that is now enforced rather than
+// observed: this reads site_public, a view with no email column at all, so the
+// value cannot be serialized into the page even by accident.
 export default async function ContactPage({
   searchParams,
 }: {
   searchParams: Promise<{ email?: string }>;
 }) {
-  const { email } = await searchParams;
+  const [{ email }, site] = await Promise.all([searchParams, getSite()]);
+
+  const infoRows: { label: string; value: string; href: string; external?: boolean }[] = [
+    { label: "Phone", value: site.phone ?? "", href: site.phoneHref ?? "#" },
+    {
+      label: "Instagram",
+      value: `@${site.instagramHandle}`,
+      href: site.instagramUrl ?? "#",
+      external: true,
+    },
+  ];
+
   return (
     <div className="gutter pb-28 pt-28 md:pt-36">
       {/* Hero — CONTACT + a decorative arrow (no email link — anti-scrape) */}

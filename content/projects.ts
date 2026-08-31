@@ -155,6 +155,18 @@ export const featured = projects.filter((p) => p.featured);
 export const getProject = (slug: string) =>
   projects.find((p) => p.slug === slug);
 
+// The current slate — the six films the desktop hero shows as columns, in order.
+// Lives here rather than in HeroC so the hero, the homepage gallery (which
+// excludes these six) and `npm run wordmark` all read one array instead of three.
+export const HERO_SLUGS = [
+  "the-odyssey",
+  "the-hunger-games",
+  "the-mandalorian-and-grogu",
+  "the-dog-stars",
+  "the-end-of-oak-street",
+  "masters-of-the-universe",
+];
+
 // Newest-first by release year. Stable sort keeps the curated order within a
 // year (films only carry `year`, so same-year ties can't be date-ordered).
 export const projectsByReleaseNewest: Project[] = [...projects].sort(
