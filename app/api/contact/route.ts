@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 // Contact form send, via Resend.
 //
@@ -52,7 +53,25 @@ export async function POST(req: Request) {
 
   const { RESEND_API_KEY, CONTACT_TO, CONTACT_FROM } = process.env;
 
-  if (!RESEND_API_KEY || !CONTACT_TO) {
+  // The Settings screen lets an editor change where messages land, so the
+  // stored address wins over the environment variable. Without this the field
+  // would look like it works and quietly do nothing. Falls back to the env var
+  // if the database is unreachable — delivering the message matters more than
+  // delivering it to the newest address.
+  let deliverTo = CONTACT_TO;
+  try {
+    const { data } = await supabaseAdmin()
+      .from("site_private")
+      .select("contact_email")
+      .eq("id", 1)
+      .single();
+    const stored = (data as { contact_email: string } | null)?.contact_email;
+    if (stored) deliverTo = stored;
+  } catch {
+    /* keep the env value */
+  }
+
+  if (!RESEND_API_KEY || !deliverTo) {
     return NextResponse.json(
       { error: "Email isn't configured yet." },
       { status: 500 },
@@ -65,7 +84,7 @@ export async function POST(req: Request) {
     // the error branch has to cover both that and a transport failure.
     const { error } = await resend.emails.send({
       from: CONTACT_FROM || FALLBACK_FROM,
-      to: CONTACT_TO,
+      to: deliverTo,
       replyTo: `${name} <${email}>`,
       subject: subject || `Enquiry from ${name}`,
       text: `${message}\n\n— ${name} (${email})`,
