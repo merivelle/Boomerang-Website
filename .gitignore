@@ -42,3 +42,9 @@ yarn-error.log*
 
 # local scratch
 /scratchpad/
+
+# page snapshots used to gate the CMS migration (scripts/snapshot-pages.sh)
+/.snapshots/
+
+# partial downloads from yt-dlp
+*.part

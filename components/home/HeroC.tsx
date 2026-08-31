@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/content/projects";
-import { getProject } from "@/content/projects";
+import { getProject, HERO_SLUGS } from "@/content/projects";
 import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
 import { useLightbox } from "@/components/media/LightboxProvider";
@@ -17,15 +17,7 @@ import { HeroWordmark } from "@/components/home/HeroWordmark";
 // Desktop only. A phone gets HeroWordmark instead: these columns depend on
 // hover, and a full-height phone column crops a 16:9 still to a 1:2.6 sliver.
 // The same six slugs feed both — the wordmark's masking strip is generated
-// from this array by `npm run wordmark`.
-const HERO_SLUGS = [
-  "the-odyssey",
-  "the-hunger-games",
-  "the-mandalorian-and-grogu",
-  "the-dog-stars",
-  "the-end-of-oak-street",
-  "masters-of-the-universe",
-];
+// from HERO_SLUGS by `npm run wordmark`.
 const COLUMNS = HERO_SLUGS.map(getProject).filter(Boolean) as Project[];
 
 function Columns() {

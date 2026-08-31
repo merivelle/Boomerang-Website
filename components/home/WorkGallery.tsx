@@ -1,22 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { projectsWithStills } from "@/content/projects";
+import { HERO_SLUGS, projectsWithStills } from "@/content/projects";
 import { WorkCard } from "@/components/work/WorkCard";
 import { SoundProvider } from "@/components/work/SoundContext";
 
 // The rest of the body of work — a contact sheet under the hero slate + clients.
 // A 2px gutter so it reads as film, not cards. The six hero-column titles are
 // left out here (they lead the page already); everything else is the archive.
-const HERO_SLUGS = new Set([
-  "the-odyssey",
-  "the-hunger-games",
-  "the-mandalorian-and-grogu",
-  "the-dog-stars",
-  "the-end-of-oak-street",
-  "masters-of-the-universe",
-]);
-const REST = projectsWithStills.filter((p) => !HERO_SLUGS.has(p.slug));
+const HERO = new Set(HERO_SLUGS);
+const REST = projectsWithStills.filter((p) => !HERO.has(p.slug));
 // The homepage shows a strong selection; the full archive lives on /work
 // (paged + filterable). Real-still credits lead the array, so the cut is curated.
 const SHOWN = 24;
