@@ -26,6 +26,8 @@ export default async function NewWorkPage() {
         poster: null,
         hasRealPoster: false,
         focal: null,
+        seoTitle: "",
+        seoDescription: "",
       }}
       {...o}
     />

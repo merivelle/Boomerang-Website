@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import Link from "next/link";
 import type { Project } from "@/lib/cms/types";
 import { youTubeEmbed } from "@/lib/youtube";
 
@@ -86,9 +87,20 @@ export function Lightbox({
             <h2 id={titleId} className="text-sm uppercase tracking-[-0.01em] text-text md:text-lg">
               {project.title}
             </h2>
-            <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted">
-              {project.studio} · <span className="tabular-nums">{project.year}</span>
-            </p>
+            <div className="flex shrink-0 items-baseline gap-5">
+              <p className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted">
+                {project.studio} · <span className="tabular-nums">{project.year}</span>
+              </p>
+              {/* The lightbox stays the browsing experience; this is how a
+                  single credit becomes a link someone can send. */}
+              <Link
+                href={`/work/${project.slug}`}
+                onClick={onClose}
+                className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors duration-hover ease-out hover:text-text"
+              >
+                Full credit →
+              </Link>
+            </div>
           </div>
         </div>
       ) : (

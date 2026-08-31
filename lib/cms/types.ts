@@ -60,6 +60,9 @@ export type Project = {
   featuredRank?: number;
   heroRank?: number;
   published: boolean;
+  /** Per-credit overrides, used only by /work/[slug]. */
+  seoTitle?: string;
+  seoDescription?: string;
 };
 
 export type Client = {

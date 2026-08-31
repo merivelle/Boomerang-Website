@@ -21,6 +21,8 @@ export type WorkFormData = {
   poster: string | null;
   hasRealPoster: boolean;
   focal: { x: number; y: number } | null;
+  seoTitle: string;
+  seoDescription: string;
 };
 
 export function WorkForm({
@@ -183,6 +185,41 @@ export function WorkForm({
               </div>
             </Field>
           )}
+
+          <details className="border-t border-zinc-100 pt-5">
+            <summary className="admin-label cursor-pointer select-none">
+              Search wording (optional)
+            </summary>
+            <div className="mt-4 space-y-4">
+              <Field
+                label="Page title"
+                hint="How this credit's own page reads in Google. Leave blank to use the project title."
+              >
+                <input name="seo_title" defaultValue={data.seoTitle} className="admin-input" />
+              </Field>
+              <Field
+                label="Page description"
+                hint="Leave blank and one is written from the client, year and type of work."
+              >
+                <textarea
+                  name="seo_description"
+                  rows={2}
+                  defaultValue={data.seoDescription}
+                  className="admin-input resize-y"
+                />
+              </Field>
+              {data.slug && (
+                <a
+                  href={`/work/${data.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-xs text-zinc-600 underline underline-offset-2 hover:text-zinc-900"
+                >
+                  View this credit&rsquo;s page ↗
+                </a>
+              )}
+            </div>
+          </details>
 
           <Field
             label="Trailer link"

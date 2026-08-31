@@ -200,6 +200,57 @@ export async function getHeroWordmarks(f: Fetcher): Promise<{ a?: string; b?: st
   return { a: pick("A"), b: pick("B") };
 }
 
+/** One credit by slug. Published + has a real frame, same gate as /work. */
+export async function getProject(f: Fetcher, slug: string): Promise<Project | null> {
+  const data = await rows(
+    f,
+    `/projects?select=${PROJECT_COLS},seo_title,seo_description&slug=eq.${encodeURIComponent(slug)}` +
+      `&published=is.true&still_media_id=not.is.null&limit=1`,
+    { tags: ["projects", "media"] },
+  );
+  if (!data[0]) return null;
+  const p = toProject(data[0]);
+  const raw = data[0] as { seo_title: string | null; seo_description: string | null };
+  return { ...p, seoTitle: raw.seo_title ?? undefined, seoDescription: raw.seo_description ?? undefined };
+}
+
+/** Slugs for generateStaticParams — the same set /work shows. */
+export async function getPublishedSlugs(f: Fetcher): Promise<string[]> {
+  const data = await rows(
+    f,
+    `/projects?select=slug&published=is.true&still_media_id=not.is.null&order=${ORDER}`,
+    { tags: ["projects"] },
+  );
+  return (data as Array<{ slug: string }>).map((r) => r.slug);
+}
+
+/**
+ * The credits either side of this one, in the order /work lists them, plus a
+ * few from the same studio. Both are just the archive re-sliced — no new
+ * editorial surface for anyone to maintain.
+ */
+export async function getProjectContext(
+  f: Fetcher,
+  slug: string,
+): Promise<{ prev: Project | null; next: Project | null; related: Project[] }> {
+  const all = await getWorkProjects(f);
+  const i = all.findIndex((p) => p.slug === slug);
+  if (i === -1) return { prev: null, next: null, related: [] };
+
+  const current = all[i];
+  const related = all
+    .filter((p) => p.slug !== slug && p.studio === current.studio)
+    .slice(0, 3);
+
+  return {
+    prev: all[i - 1] ?? null,
+    next: all[i + 1] ?? null,
+    related: related.length
+      ? related
+      : all.filter((p) => p.slug !== slug && p.category === current.category).slice(0, 3),
+  };
+}
+
 export async function getCategories(f: Fetcher): Promise<Category[]> {
   const data = await rows(f, "/categories?select=slug,label&order=sort_index.asc", { tags: ["projects"] });
   return data as never as Category[];

@@ -38,6 +38,8 @@ function readForm(form: FormData) {
     role: String(form.get("role") ?? "").trim(),
     category_id: String(form.get("category_id") ?? ""),
     trailer_url: trailer === "" ? null : trailer,
+    seoTitle: String(form.get("seo_title") ?? "").trim(),
+    seoDescription: String(form.get("seo_description") ?? "").trim(),
     published: form.get("published") === "on",
     wantsFeatured: form.get("featured") === "on",
     tagIds: form.getAll("tags").map(String),
@@ -78,6 +80,8 @@ export async function saveWork(slug: string | null, form: FormData): Promise<Sav
     category_id: v.category_id,
     trailer_url: v.trailer_url,
     published: v.published,
+    seo_title: v.seoTitle || null,
+    seo_description: v.seoDescription || null,
   };
 
   let id: string;

@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 type Row = {
   slug: string; title: string; studio: string; year: number; role: string;
   trailer_url: string | null; published: boolean;
+  seo_title: string | null; seo_description: string | null;
   featured_rank: number | null; hero_rank: number | null; category_id: string;
   still: MediaRef | null; placeholder: MediaRef | null;
   project_tags: Array<{ tag_id: string }>;
@@ -48,6 +49,8 @@ export default async function EditWorkPage({ params }: { params: Promise<{ slug:
         poster: mediaUrl(p.still) ?? mediaUrl(p.placeholder),
         hasRealPoster: !!p.still,
         focal: focalOf(p.still),
+        seoTitle: p.seo_title ?? "",
+        seoDescription: p.seo_description ?? "",
       }}
       {...o}
     />

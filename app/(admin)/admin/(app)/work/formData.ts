@@ -18,6 +18,7 @@ export const mediaUrl = (m: MediaRef | null) =>
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${m.bucket}/${m.object_path}`;
 
 export const PROJECT_SELECT = `slug,title,studio,year,role,trailer_url,published,
+  seo_title,seo_description,
   featured_rank,hero_rank,category_id,
   still:media!projects_still_media_id_fkey(${MEDIA}),
   placeholder:media!projects_placeholder_media_id_fkey(${MEDIA}),
