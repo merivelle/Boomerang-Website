@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 async function counts() {
   const db = await supabaseServer();
 
-  const [all, live, needsPoster, featured, hero, clients, recent] = await Promise.all([
+  const [all, live, needsPoster, featured, hero, clients, recent, unread] = await Promise.all([
     db.from("projects").select("id", { count: "exact", head: true }),
     db.from("projects").select("id", { count: "exact", head: true })
       .eq("published", true).not("still_media_id", "is", null),
@@ -19,6 +19,7 @@ async function counts() {
     db.from("clients").select("id", { count: "exact", head: true }).eq("published", true),
     db.from("projects").select("slug,title,studio,year,created_at")
       .order("created_at", { ascending: false }).limit(5),
+    db.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
   ]);
 
   return {
@@ -29,6 +30,7 @@ async function counts() {
     hero: hero.count ?? 0,
     clients: clients.count ?? 0,
     recent: (recent.data ?? []) as Array<{ slug: string; title: string; studio: string; year: number }>,
+    unread: unread.count ?? 0,
   };
 }
 
@@ -60,7 +62,11 @@ export default async function Dashboard() {
           hint={c.needsPoster ? "Hidden until an image is added" : "Nothing waiting"}
         />
         <Stat label="Selected Work" value={c.featured} hint="On the homepage list" />
-        <Stat label="Clients" value={c.clients} hint="On the client wall" />
+        <Stat
+          label="New messages"
+          value={c.unread}
+          hint={c.unread ? "Waiting for a reply" : "Nothing new"}
+        />
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.4fr_1fr]">

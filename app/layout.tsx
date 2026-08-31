@@ -40,6 +40,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${site.name} — ${site.founder}`,
       description: site.intro,
       type: "website",
+      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: site.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${site.name} — ${site.founder}`,
+      description: site.intro,
+      images: ["/og.jpg"],
     },
   };
 }

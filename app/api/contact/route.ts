@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 // Contact form send, via Resend.
@@ -21,6 +22,37 @@ export const runtime = "nodejs";
 const FALLBACK_FROM = "onboarding@resend.dev";
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+
+/**
+ * The IP is hashed, never stored raw: the point is rate limiting and spotting
+ * duplicates, not keeping a log of who visited.
+ */
+async function recordInquiry(
+  req: Request,
+  fields: { name: string; email: string; subject?: string; message: string },
+) {
+  try {
+    const salt = process.env.INQUIRY_IP_SALT;
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "";
+
+    await supabaseAdmin()
+      .from("inquiries")
+      .insert({
+        name: fields.name,
+        email: fields.email,
+        subject: fields.subject || null,
+        message: fields.message,
+        referer: req.headers.get("referer"),
+        user_agent: req.headers.get("user-agent"),
+        ip_hash: ip && salt ? createHash("sha256").update(ip + salt).digest("hex") : null,
+      } as never);
+  } catch (e) {
+    console.error("inquiry not recorded:", e);
+  }
+}
 
 export async function POST(req: Request) {
   let data: {
@@ -90,6 +122,13 @@ export async function POST(req: Request) {
       text: `${message}\n\n— ${name} (${email})`,
     });
     if (error) throw error;
+
+    // Store AFTER sending, and never fail the request on a write error. The
+    // business function is that the message reaches the inbox; the record in
+    // the admin is a convenience. If the database is down, the enquiry must
+    // still go through.
+    void recordInquiry(req, { name, email, subject, message });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     // Surface the real cause in the Vercel function logs for debugging.

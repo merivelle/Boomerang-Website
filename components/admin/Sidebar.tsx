@@ -15,11 +15,12 @@ const LINKS = [
   { href: "/admin/about", label: "About" },
   { href: "/admin/seo", label: "SEO" },
   { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/messages", label: "Messages" },
 ];
 
 // Sections that exist in the plan but have not shipped yet. Shown greyed rather
 // than hidden, so nobody wonders whether they are looking in the wrong place.
-const SOON = ["Photos", "Messages"];
+const SOON = ["Photos"];
 
 export function Sidebar({ email, role }: { email: string; role: string }) {
   const pathname = usePathname();
