@@ -37,6 +37,7 @@ export const getWorkProjects = () => q.getWorkProjects(fetcher);
 export const getHomeGrid = (limit?: number) => q.getHomeGrid(fetcher, limit);
 export const getHeroColumns = () => q.getHeroColumns(fetcher);
 export const getFeatured = () => q.getFeatured(fetcher);
+export const getHeroWordmarks = () => q.getHeroWordmarks(fetcher);
 export const getCategories = () => q.getCategories(fetcher);
 export const getFilterTags = () => q.getFilterTags(fetcher);
 export const getClientGroups = () => q.getClientGroups(fetcher);

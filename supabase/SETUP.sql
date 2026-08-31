@@ -274,6 +274,7 @@ create table content_revisions (
 );
 create index content_revisions_row_idx on content_revisions (table_name, row_id, created_at desc);
 
+
 -- ═══════════════════════════════════════════════════════════════════════
 -- 0002_triggers.sql
 -- ═══════════════════════════════════════════════════════════════════════
@@ -349,6 +350,7 @@ $$;
 
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 0003_rls.sql
@@ -527,6 +529,7 @@ create policy storage_admin_update on storage.objects for update to authenticate
 create policy storage_admin_delete on storage.objects for delete to authenticated
   using (is_admin() and (bucket_id not in ('logos','clips') or is_developer()));
 
+
 -- ═══════════════════════════════════════════════════════════════════════
 -- 0004_storage.sql
 -- ═══════════════════════════════════════════════════════════════════════
@@ -551,3 +554,29 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
   -- pass turns out to have been wrong. 1 GB free against 25 MB of current assets.
   ('originals', 'originals', false, 52428800, array['image/jpeg','image/png','image/webp','image/avif','image/tiff'])
 on conflict (id) do nothing;
+
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 0005_focal_nullable.sql
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Focal point: NULL means "nobody has chosen one".
+--
+-- The columns were NOT NULL DEFAULT 0.5/0.38, which encoded the hero's
+-- hard-coded object-[50%_38%] as if it were true of every image. It is not:
+-- the work grid renders plain object-cover, which is 50%/50%. Applying the
+-- default to the 110 migrated assets would silently re-crop every card in the
+-- contact sheet.
+--
+-- Nullable is the honest shape. The 110 assets migrated from /public have
+-- never had a focal point chosen, so they get NULL and each component keeps
+-- the framing it already had. Newly uploaded posters get a real value from the
+-- editor's picker.
+
+alter table media
+  alter column focal_x drop default,
+  alter column focal_y drop default,
+  alter column focal_x drop not null,
+  alter column focal_y drop not null;
+
+update media set focal_x = null, focal_y = null;

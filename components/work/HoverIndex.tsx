@@ -21,6 +21,7 @@ export type IndexItem = {
   key: string;
   bgSlug: string;
   bgStill?: string;
+  bgFocal?: { x: number; y: number };
   bgTitle: string;
   bgClip?: string;
   href?: string;
@@ -186,6 +187,7 @@ export function HoverIndex<T extends IndexItem>({
             <Still
               slug={item.bgSlug}
               src={item.bgStill}
+              focal={item.bgFocal}
               title={item.bgTitle}
               priority={i === 0}
               sizes="100vw"

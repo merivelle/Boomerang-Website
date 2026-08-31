@@ -25,6 +25,7 @@ export default async function NewWorkPage() {
         tagIds: [],
         poster: null,
         hasRealPoster: false,
+        focal: null,
       }}
       {...o}
     />

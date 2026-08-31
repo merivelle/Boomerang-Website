@@ -10,11 +10,12 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 const LINKS = [
   { href: "/admin", label: "Dashboard", exact: true },
   { href: "/admin/work", label: "Work" },
+  { href: "/admin/homepage", label: "Homepage" },
 ];
 
 // Sections that exist in the plan but have not shipped yet. Shown greyed rather
 // than hidden, so nobody wonders whether they are looking in the wrong place.
-const SOON = ["Homepage", "Clients", "About", "Photos", "Messages", "Settings"];
+const SOON = ["Clients", "About", "Photos", "Messages", "Settings"];
 
 export function Sidebar({ email, role }: { email: string; role: string }) {
   const pathname = usePathname();

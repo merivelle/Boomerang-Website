@@ -8,6 +8,7 @@ import { LightboxProvider } from "@/components/media/LightboxProvider";
 import {
   getFeatured,
   getHeroColumns,
+  getHeroWordmarks,
   getHomeGrid,
   getLogoClients,
 } from "@/lib/cms/queries";
@@ -16,16 +17,17 @@ import {
 // Hero C → Selected Work → Clients → Work gallery → Contact. Nav links jump to
 // the anchors; the deep pages (/work, /about, /contact, /clients) exist for depth.
 export default async function HomePage() {
-  const [columns, featured, gallery, logos] = await Promise.all([
+  const [columns, featured, gallery, logos, wordmark] = await Promise.all([
     getHeroColumns(),
     getFeatured(),
     getHomeGrid(24),
     getLogoClients(),
+    getHeroWordmarks(),
   ]);
 
   return (
     <LightboxProvider>
-      <HeroC columns={columns} />
+      <HeroC columns={columns} wordmark={wordmark} />
 
       <section id="work" className="gutter scroll-mt-24 py-20 md:py-28">
         <SelectedWorkIndex films={featured} />

@@ -49,6 +49,11 @@ export type Project = {
   trailerUrl?: string;
   /** A real film frame. Absent is what hides a credit from the public site. */
   still?: string;
+  /**
+   * Where the subject sits in the still, 0–1. Only present once an editor has
+   * chosen it; absent means each component keeps its existing framing.
+   */
+  focal?: { x: number; y: number };
   /** Silent hover loop. Developer-uploaded; encoding is not an editor task. */
   clip?: string;
   tags: string[];

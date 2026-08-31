@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveWork } from "@/app/(admin)/admin/(app)/work/actions";
+import { PosterUploader } from "./PosterUploader";
 
 export type WorkFormData = {
   slug: string | null;
@@ -20,6 +20,7 @@ export type WorkFormData = {
   tagIds: string[];
   poster: string | null;
   hasRealPoster: boolean;
+  focal: { x: number; y: number } | null;
 };
 
 export function WorkForm({
@@ -199,41 +200,12 @@ export function WorkForm({
 
         {/* ---- poster + visibility ---- */}
         <div className="space-y-6">
-          <div className="rounded-lg border border-zinc-200 bg-white p-5">
-            <p className="admin-label">Poster</p>
-            <div className="relative mt-3 aspect-video w-full overflow-hidden rounded bg-zinc-100">
-              {data.poster && (
-                <Image
-                  src={data.poster}
-                  alt=""
-                  fill
-                  sizes="288px"
-                  className={`object-cover ${data.hasRealPoster ? "" : "opacity-50"}`}
-                />
-              )}
-              {!data.poster && (
-                <div className="flex h-full items-center justify-center text-xs text-zinc-400">
-                  No poster yet
-                </div>
-              )}
-            </div>
-
-            {data.hasRealPoster ? (
-              <p className="mt-3 text-xs text-zinc-500">
-                This credit has a poster and can appear on the site.
-              </p>
-            ) : (
-              <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
-                Without a poster this credit stays hidden from the website. You
-                can still fill everything in and save.
-              </p>
-            )}
-
-            <p className="mt-3 border-t border-zinc-100 pt-3 text-xs leading-relaxed text-zinc-500">
-              Uploading is not switched on yet — ask your developer to add the
-              image for now.
-            </p>
-          </div>
+          <PosterUploader
+            slug={data.slug}
+            poster={data.poster}
+            hasRealPoster={data.hasRealPoster}
+            focal={data.focal}
+          />
 
           <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5">
             <p className="admin-label">Visibility</p>

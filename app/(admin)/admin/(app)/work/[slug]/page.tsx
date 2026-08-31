@@ -1,16 +1,15 @@
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { WorkForm } from "@/components/admin/WorkForm";
-import { formOptions, mediaUrl, PROJECT_SELECT } from "../formData";
+import { focalOf, formOptions, mediaUrl, PROJECT_SELECT, type MediaRef } from "../formData";
 
 export const dynamic = "force-dynamic";
 
-type Media = { legacy_public_path: string | null; bucket: string | null; object_path: string | null };
 type Row = {
   slug: string; title: string; studio: string; year: number; role: string;
   trailer_url: string | null; published: boolean;
   featured_rank: number | null; hero_rank: number | null; category_id: string;
-  still: Media | null; placeholder: Media | null;
+  still: MediaRef | null; placeholder: MediaRef | null;
   project_tags: Array<{ tag_id: string }>;
 };
 
@@ -48,6 +47,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ slug:
         tagIds: (p.project_tags ?? []).map((t) => t.tag_id),
         poster: mediaUrl(p.still) ?? mediaUrl(p.placeholder),
         hasRealPoster: !!p.still,
+        focal: focalOf(p.still),
       }}
       {...o}
     />

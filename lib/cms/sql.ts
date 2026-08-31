@@ -33,6 +33,12 @@ const ORDER = "year.desc,sort_index.asc";
 
 const MEDIA_COLS = "id,kind,bucket,object_path,legacy_public_path,width,height,lqip,focal_x,focal_y,alt";
 
+/** NULL focal = nobody chose one. Do not substitute a default: that re-crops every migrated asset. */
+const focalOf = (m: Media | null) =>
+  m && m.focalX !== null && m.focalY !== null && !Number.isNaN(m.focalX) && !Number.isNaN(m.focalY)
+    ? { x: m.focalX, y: m.focalY }
+    : undefined;
+
 const PROJECT_COLS = [
   "id,slug,title,studio,year,role,mood,tone,trailer_url",
   "sort_index,featured_rank,hero_rank,published",
@@ -74,8 +80,8 @@ function toMedia(row: Record<string, unknown> | null): Media | null {
     width: r.width,
     height: r.height,
     lqip: r.lqip,
-    focalX: Number(r.focal_x),
-    focalY: Number(r.focal_y),
+    focalX: r.focal_x === null ? (null as never) : Number(r.focal_x),
+    focalY: r.focal_y === null ? (null as never) : Number(r.focal_y),
     alt: r.alt,
   };
 }
@@ -111,6 +117,7 @@ function toProject(row: Record<string, unknown>): Project {
     tone: r.tone === null ? undefined : Number(r.tone),
     trailerUrl: r.trailer_url ?? undefined,
     still: toMedia(r.still)?.url,
+    focal: focalOf(toMedia(r.still)),
     clip: toMedia(r.clip)?.url,
     tags: (r.project_tags ?? []).map((t) => t.tags.slug).sort(),
     featuredRank: r.featured_rank ?? undefined,
@@ -178,6 +185,19 @@ export async function getFeatured(f: Fetcher): Promise<Project[]> {
     { tags: ["projects", "media"] },
   );
   return data.map(toProject);
+}
+
+/** The two baked strips behind the mobile BOOMERANG lettering. */
+export async function getHeroWordmarks(f: Fetcher): Promise<{ a?: string; b?: string }> {
+  const data = await rows(
+    f,
+    `/media?select=${MEDIA_COLS}&kind=eq.hero&order=alt.asc`,
+    { tags: ["media"] },
+  );
+  const list = data.map(toMedia).filter(Boolean) as Media[];
+  const pick = (n: string) =>
+    list.find((m) => (m.alt ?? "").endsWith(n) || m.url.includes(`wordmark-${n.toLowerCase()}`))?.url;
+  return { a: pick("A"), b: pick("B") };
 }
 
 export async function getCategories(f: Fetcher): Promise<Category[]> {

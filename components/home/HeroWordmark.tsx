@@ -22,10 +22,11 @@ import { Waveform } from "@/components/motion/Waveform";
 // composition changes as a single cut. Nothing slides, pans or tiles; this is a
 // title treatment, not a ticker.
 //
-// Both triptychs are built by `npm run wordmark` from the same HERO_SLUGS the
-// desktop columns use.
-const TRIPTYCH_A = "/assets/hero/wordmark-a.jpg";
-const TRIPTYCH_B = "/assets/hero/wordmark-b.jpg";
+// Both triptychs are rebuilt from the current hero slate whenever an editor
+// changes it — see lib/wordmark.ts. The committed files are the fallback for
+// the state before anyone has touched the hero.
+const FALLBACK_A = "/assets/hero/wordmark-a.jpg";
+const FALLBACK_B = "/assets/hero/wordmark-b.jpg";
 
 // `w-fit` is load-bearing. A block <p> fills its container, so scaleX would
 // stretch the whole 335px box and push the page sideways while the glyphs sat
@@ -63,7 +64,9 @@ function Lines({ src, hidden }: { src: string; hidden?: boolean }) {
   );
 }
 
-export function HeroWordmark() {
+export function HeroWordmark({ srcA, srcB }: { srcA?: string; srcB?: string } = {}) {
+  const TRIPTYCH_A = srcA || FALLBACK_A;
+  const TRIPTYCH_B = srcB || FALLBACK_B;
   return (
     <>
       {/* The triptych is a CSS background, so it can't take next/image's

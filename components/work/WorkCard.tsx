@@ -47,6 +47,7 @@ export function WorkCard({
         <Still
           slug={project.slug}
           src={project.still}
+          focal={project.focal}
           title={project.title}
           priority={priority}
           sizes={sizes}

@@ -1,11 +1,18 @@
 import "server-only";
 import { supabaseServer } from "@/lib/supabase/server";
 
-const MEDIA = "legacy_public_path,bucket,object_path";
+const MEDIA = "legacy_public_path,bucket,object_path,focal_x,focal_y";
 
-export const mediaUrl = (m: {
+export type MediaRef = {
   legacy_public_path: string | null; bucket: string | null; object_path: string | null;
-} | null) =>
+  focal_x: number | null; focal_y: number | null;
+};
+
+/** NULL focal means nobody has chosen one — the component keeps its own framing. */
+export const focalOf = (m: MediaRef | null) =>
+  m && m.focal_x !== null && m.focal_y !== null ? { x: Number(m.focal_x), y: Number(m.focal_y) } : null;
+
+export const mediaUrl = (m: MediaRef | null) =>
   !m ? null
     : m.legacy_public_path ??
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${m.bucket}/${m.object_path}`;

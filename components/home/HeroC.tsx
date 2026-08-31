@@ -65,6 +65,7 @@ function Columns({ columns }: { columns: Project[] }) {
                 <Still
                   slug={p.slug}
                   src={p.still}
+                  focal={p.focal}
                   title={p.title}
                   // No `priority` here. It emits a <link rel=preload>, which
                   // ignores the `hidden md:flex` above it — a phone would fetch
@@ -101,11 +102,17 @@ function Columns({ columns }: { columns: Project[] }) {
   );
 }
 
-export function HeroC({ columns }: { columns: Project[] }) {
+export function HeroC({
+  columns,
+  wordmark,
+}: {
+  columns: Project[];
+  wordmark?: { a?: string; b?: string };
+}) {
   return (
     <SoundProvider>
       <section className="relative">
-        <HeroWordmark />
+        <HeroWordmark srcA={wordmark?.a} srcB={wordmark?.b} />
         <Columns columns={columns} />
 
         {/* Hero chrome, lifted to the top so it never collides with the column

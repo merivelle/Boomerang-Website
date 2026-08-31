@@ -136,6 +136,24 @@ export async function saveWork(slug: string | null, form: FormData): Promise<Sav
   return { ok: true, slug: finalSlug };
 }
 
+/** The editor clicked the preview to say what must stay in frame. */
+export async function setFocalPoint(slug: string, x: number, y: number) {
+  const db = await supabaseServer();
+  const { data } = await db.from("projects").select("still_media_id").eq("slug", slug).single();
+  const id = (data as { still_media_id: string | null } | null)?.still_media_id;
+  if (!id) return;
+
+  await db
+    .from("media")
+    .update({
+      focal_x: Math.min(1, Math.max(0, x)),
+      focal_y: Math.min(1, Math.max(0, y)),
+    } as never)
+    .eq("id", id);
+
+  publishChanges();
+}
+
 export async function setPublished(slug: string, published: boolean) {
   const db = await supabaseServer();
   // Unpublishing has to release the curated slots, or the database constraint

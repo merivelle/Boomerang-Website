@@ -21,6 +21,7 @@ function Index({ films }: { films: Project[] }) {
         key: f.slug,
         bgSlug: f.slug,
         bgStill: f.still,
+        bgFocal: f.focal,
         bgTitle: f.title,
         bgClip: f.clip,
       })),
