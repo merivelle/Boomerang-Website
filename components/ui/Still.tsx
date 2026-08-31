@@ -7,6 +7,7 @@ import Image from "next/image";
 // and survives page-load jank, unlike a Framer Motion transform.
 export function Still({
   slug,
+  src,
   title,
   priority,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
@@ -15,6 +16,11 @@ export function Still({
   quality,
 }: {
   slug: string;
+  /**
+   * Resolved image URL. Falls back to the slug convention so the markup is
+   * unchanged for the assets already in /public; uploads pass a real URL.
+   */
+  src?: string;
   title: string;
   priority?: boolean;
   sizes?: string;
@@ -25,7 +31,7 @@ export function Still({
 }) {
   return (
     <Image
-      src={`/assets/stills/${slug}.jpg`}
+      src={src ?? `/assets/stills/${slug}.jpg`}
       alt={title}
       fill
       sizes={sizes}

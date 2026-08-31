@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { clientGroups } from "@/content/clients";
+import { getClientGroups, seoMetadata } from "@/lib/cms/queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
-  title: "Clients",
-  description:
-    "Studios, networks, streamers and game publishers Boomerang Music has scored for.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata("/clients", {
+    title: "Clients",
+    description:
+      "Studios, networks, streamers and game publishers Boomerang Music has scored for.",
+  });
+}
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  const clientGroups = await getClientGroups();
+
   return (
     <div className="gutter pb-28 pt-28 md:pt-36">
       <PageHeader title="Clients" />
@@ -34,7 +38,7 @@ export default function ClientsPage() {
                   <div className="flex h-24 items-center justify-center border-b border-r border-line px-6 transition-colors duration-hover ease-out hover:bg-s1 md:h-28">
                     {client.logo ? (
                       <Image
-                        src={`/assets/logos/${client.logo}.png`}
+                        src={client.logo}
                         alt={client.name}
                         width={160}
                         height={40}

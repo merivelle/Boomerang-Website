@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Project } from "@/content/projects";
+import { useState } from "react";
+import type { Project } from "@/lib/cms/types";
 import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
 import { useLightbox } from "@/components/media/LightboxProvider";
@@ -21,32 +21,14 @@ export function WorkCard({
   /** Stretch to the parent's height instead of locking 16/9 (hero contact sheet). */
   fill?: boolean;
 }) {
-  const { enabled } = useSound();
   const { open } = useLightbox();
   const [hot, setHot] = useState(false); // hover OR keyboard focus
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Gate hover: touch devices synthesise a mouseenter on tap, which would fire
   // the cue and the scale on the way to navigating away.
   const canHover = () =>
     typeof window !== "undefined" &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (hot && enabled && project.audio) {
-      // Restart from frame one. This is what separates "a clip appeared" from
-      // "the clip started".
-      el.currentTime = 0;
-      el.volume = 0.7;
-      el.play().catch(() => {});
-    } else {
-      el.pause();
-    }
-  }, [hot, enabled, project.audio]);
-
-  const playing = hot && enabled && !!project.audio;
 
   return (
     <button
@@ -64,6 +46,7 @@ export function WorkCard({
       >
         <Still
           slug={project.slug}
+          src={project.still}
           title={project.title}
           priority={priority}
           sizes={sizes}
@@ -108,14 +91,11 @@ export function WorkCard({
               hot ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Waveform bars={14} height={16} active={hot} playing={playing} />
+            <Waveform bars={14} height={16} active={hot} playing={false} />
           </div>
         </div>
       </div>
 
-      {project.audio && (
-        <audio ref={audioRef} src={project.audio} preload="none" loop />
-      )}
     </button>
   );
 }

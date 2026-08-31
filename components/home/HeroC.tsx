@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import type { Project } from "@/content/projects";
-import { getProject, HERO_SLUGS } from "@/content/projects";
+import { useState } from "react";
+import type { Project } from "@/lib/cms/types";
 import { Still } from "@/components/ui/Still";
 import { Waveform } from "@/components/motion/Waveform";
 import { useLightbox } from "@/components/media/LightboxProvider";
@@ -16,38 +15,22 @@ import { HeroWordmark } from "@/components/home/HeroWordmark";
 //
 // Desktop only. A phone gets HeroWordmark instead: these columns depend on
 // hover, and a full-height phone column crops a 16:9 still to a 1:2.6 sliver.
-// The same six slugs feed both — the wordmark's masking strip is generated
-// from HERO_SLUGS by `npm run wordmark`.
-const COLUMNS = HERO_SLUGS.map(getProject).filter(Boolean) as Project[];
-
-function Columns() {
-  const { enabled } = useSound();
+// The same six films feed both — the wordmark's masking strip is generated
+// from the hero slate by `npm run wordmark`. Ordering now lives in the
+// database (projects.hero_rank), which is also what stops a poster-less film
+// from ever reaching this component.
+function Columns({ columns }: { columns: Project[] }) {
   const { open } = useLightbox();
   const [active, setActive] = useState<number | null>(null);
-  const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
 
   const canHover = () =>
     typeof window !== "undefined" &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  useEffect(() => {
-    audioRefs.current.forEach((el, i) => {
-      if (!el) return;
-      if (active === i && enabled && COLUMNS[i].audio) {
-        el.currentTime = 0;
-        el.volume = 0.7;
-        el.play().catch(() => {});
-      } else {
-        el.pause();
-      }
-    });
-  }, [active, enabled]);
-
   return (
     <div className="hidden h-[calc(100*var(--vh))] w-full gap-[2px] bg-line md:flex">
-      {COLUMNS.map((p, i) => {
+      {columns.map((p, i) => {
         const hot = active === i;
-        const playing = hot && enabled && !!p.audio;
         return (
           <button
             key={p.slug}
@@ -81,6 +64,7 @@ function Columns() {
               >
                 <Still
                   slug={p.slug}
+                  src={p.still}
                   title={p.title}
                   // No `priority` here. It emits a <link rel=preload>, which
                   // ignores the `hidden md:flex` above it — a phone would fetch
@@ -100,7 +84,7 @@ function Columns() {
               <div
                 className={`transition-opacity duration-500 ease-out ${hot ? "opacity-100" : "opacity-0"}`}
               >
-                <Waveform bars={12} height={14} active={hot} playing={playing} />
+                <Waveform bars={12} height={14} active={hot} playing={false} />
               </div>
               <h2 className="mt-3 truncate text-base uppercase tracking-[-0.01em] text-text">
                 {p.title}
@@ -110,16 +94,6 @@ function Columns() {
               </p>
             </div>
 
-            {p.audio && (
-              <audio
-                ref={(el) => {
-                  audioRefs.current[i] = el;
-                }}
-                src={p.audio}
-                preload="none"
-                loop
-              />
-            )}
           </button>
         );
       })}
@@ -127,12 +101,12 @@ function Columns() {
   );
 }
 
-export function HeroC() {
+export function HeroC({ columns }: { columns: Project[] }) {
   return (
     <SoundProvider>
       <section className="relative">
         <HeroWordmark />
-        <Columns />
+        <Columns columns={columns} />
 
         {/* Hero chrome, lifted to the top so it never collides with the column
             captions (6 columns leave no room at the bottom corners). */}

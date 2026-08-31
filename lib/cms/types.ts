@@ -4,11 +4,17 @@
 // `import type { Project }`, and if that pulled in a module that touches
 // process.env, the service-role key would follow it into the browser bundle.
 // Keep it types-only.
+//
+// `Project` is deliberately shaped as a drop-in for the old
+// content/projects.ts type: `category` is the label string, and the media
+// fields are plain URLs. That keeps the rendered markup identical when the
+// data source swaps underneath. Richer media (focal point, blur placeholder)
+// arrives in a later phase, where a visual change is the point.
 
 export type Media = {
   id: string;
   kind: "still" | "placeholder" | "logo" | "clip" | "hero" | "og";
-  /** Resolved by lib/cms/media.ts — never stored. */
+  /** Resolved by lib/cms/sql.ts — never stored. */
   url: string;
   width: number;
   height: number;
@@ -33,22 +39,21 @@ export type Project = {
   id: string;
   slug: string;
   title: string;
-  category: Category;
+  /** The chip label, e.g. "Film" — matches the old union's runtime value. */
+  category: string;
   studio: string;
   year: number;
   role: string;
-  mood: string | null;
-  tone: number | null;
-  trailerUrl: string | null;
-  /** A real film frame. NULL is what hides a credit from the public site. */
-  still: Media | null;
-  /** Graded stand-in, shown in the admin only. */
-  placeholder: Media | null;
+  mood?: string;
+  tone?: number;
+  trailerUrl?: string;
+  /** A real film frame. Absent is what hides a credit from the public site. */
+  still?: string;
   /** Silent hover loop. Developer-uploaded; encoding is not an editor task. */
-  clip: Media | null;
+  clip?: string;
   tags: string[];
-  featuredRank: number | null;
-  heroRank: number | null;
+  featuredRank?: number;
+  heroRank?: number;
   published: boolean;
 };
 
@@ -56,8 +61,9 @@ export type Client = {
   id: string;
   slug: string;
   name: string;
-  websiteUrl: string | null;
-  logo: Media | null;
+  websiteUrl?: string;
+  /** Absent renders a text wordmark — a designed state, not a fallback. */
+  logo?: string;
 };
 
 export type ClientGroup = {
@@ -90,6 +96,6 @@ export type SeoPage = {
   path: string;
   title: string | null;
   description: string | null;
-  ogImage: Media | null;
+  ogImage: string | null;
   noindex: boolean;
 };

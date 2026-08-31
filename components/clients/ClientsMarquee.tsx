@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { logoClients } from "@/content/clients";
+import type { Client } from "@/lib/cms/types";
 
 // Slow logo marquee — the studios' own marks carry the authority. Pure CSS
 // (see .animate-marquee). Logos are normalized to white.
@@ -8,8 +8,8 @@ import { logoClients } from "@/content/clients";
 // assumes each half of the doubled row is exactly the same width, and the
 // trailing pad is what stands in for the gap that would follow the last logo.
 // Change one without the other and the loop jumps.
-export function ClientsMarquee() {
-  const row = [...logoClients, ...logoClients];
+export function ClientsMarquee({ clients }: { clients: Client[] }) {
+  const row = [...clients, ...clients];
   return (
     <div
       className="group relative flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]"
@@ -19,7 +19,7 @@ export function ClientsMarquee() {
         {row.map((client, i) => (
           <Image
             key={`${client.slug}-${i}`}
-            src={`/assets/logos/${client.logo}.png`}
+            src={client.logo!}
             alt={client.name}
             width={160}
             height={40}
@@ -28,7 +28,7 @@ export function ClientsMarquee() {
             // arrive late and leave gaps drifting past. Eager for the first
             // half; `loading` rather than `priority` so this doesn't put 21
             // preload hints in the document head.
-            loading={i < logoClients.length ? "eager" : "lazy"}
+            loading={i < clients.length ? "eager" : "lazy"}
             className="h-9 w-auto opacity-80 transition-opacity duration-hover ease-out hover:opacity-100 md:h-8 md:opacity-60"
           />
         ))}

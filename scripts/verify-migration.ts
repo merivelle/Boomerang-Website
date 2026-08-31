@@ -81,12 +81,12 @@ function check(name: string, actual: unknown, expected: unknown) {
 /** The identity of a credit as the site renders it, ignoring storage details. */
 const canon = (p: {
   slug: string; title: string; studio: string; year: number; role: string;
-  mood: string | null; tone: number | null; trailerUrl: string | null;
-  category: { label: string }; tags: string[];
+  mood?: string; tone?: number; trailerUrl?: string;
+  category: string; tags: string[];
 }) => ({
   slug: p.slug, title: p.title, studio: p.studio, year: p.year, role: p.role,
-  mood: p.mood, tone: p.tone, trailerUrl: p.trailerUrl,
-  category: p.category.label, tags: p.tags,
+  mood: p.mood ?? null, tone: p.tone ?? null, trailerUrl: p.trailerUrl ?? null,
+  category: p.category, tags: p.tags,
 });
 
 const canonOld = (p: (typeof projects)[number]) => ({
@@ -170,10 +170,10 @@ async function main() {
   // is free to be odd (it is 21). What must hold is that the DB returns exactly
   // the same set the file did, or the two halves stop matching.
   check("logoClients - count matches source exactly", logos.length, logoClients.length);
-  check("logoClients - every logo resolves to a file", logos.filter((c) => !c.logo?.url).length, 0);
+  check("logoClients - every logo resolves to a file", logos.filter((c) => !c.logo).length, 0);
   check(
     "logo paths survived the logo-key-vs-slug mismatch",
-    logos.map((c) => c.logo!.url),
+    logos.map((c) => c.logo!),
     logoClients.map((c) => `/assets/logos/${c.logo}.png`),
   );
 

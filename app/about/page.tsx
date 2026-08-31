@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { site } from "@/content/site";
+import { getSite, getSiteCredits, seoMetadata } from "@/lib/cms/queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
-  title: "About",
-  description: site.intro,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSite();
+  return seoMetadata("/about", { title: "About", description: site.intro });
+}
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [site, creditTitles] = await Promise.all([getSite(), getSiteCredits()]);
+
   return (
     <div className="gutter pb-28 pt-28 md:pt-36">
       <PageHeader title="About" />
@@ -24,8 +26,8 @@ export default function AboutPage() {
               {site.bio}
             </p>
             <p className="text-base leading-relaxed text-muted">
-              {site.credits.lead}{" "}
-              {site.credits.titles.map((title, i, arr) => (
+              {site.creditsLead}{" "}
+              {creditTitles.map((title, i, arr) => (
                 <span key={title}>
                   <span className="font-medium text-text">{title}</span>
                   {i < arr.length - 2 ? ", " : i === arr.length - 2 ? ", and " : "."}

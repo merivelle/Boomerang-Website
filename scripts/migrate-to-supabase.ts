@@ -342,10 +342,10 @@ async function main() {
   // Copied verbatim from today's metadata exports so launch changes nothing.
   await sync("seo_pages", "path", [
     { path: "/", title: "Boomerang — Trailer Music, Scoring & Sound Design", description: site.intro, noindex: false },
-    { path: "/work", title: "Work", description: "Trailer campaigns, scoring and sound design across film, series, games and brands.", noindex: false },
-    { path: "/clients", title: "Clients", description: "Studios, networks, streamers, game publishers and brands Boomerang has scored for.", noindex: false },
+    { path: "/work", title: "Work", description: "Trailer campaigns, scores and sound design across film, series, games and broadcast.", noindex: false },
+    { path: "/clients", title: "Clients", description: "Studios, networks, streamers and game publishers Boomerang Music has scored for.", noindex: false },
     { path: "/about", title: "About", description: site.intro, noindex: false },
-    { path: "/contact", title: "Contact", description: "Get in touch with Boomerang Music.", noindex: false },
+    { path: "/contact", title: "Contact", description: "Start a conversation with Boomerang Music.", noindex: false },
   ], "path");
 
   console.log(

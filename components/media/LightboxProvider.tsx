@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import type { Project } from "@/content/projects";
+import type { Project } from "@/lib/cms/types";
 import { Lightbox } from "./Lightbox";
 
 type LightboxCtx = { open: (project: Project) => void; close: () => void };

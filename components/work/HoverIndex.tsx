@@ -20,6 +20,7 @@ import { Still } from "@/components/ui/Still";
 export type IndexItem = {
   key: string;
   bgSlug: string;
+  bgStill?: string;
   bgTitle: string;
   bgClip?: string;
   href?: string;
@@ -184,6 +185,7 @@ export function HoverIndex<T extends IndexItem>({
           >
             <Still
               slug={item.bgSlug}
+              src={item.bgStill}
               title={item.bgTitle}
               priority={i === 0}
               sizes="100vw"

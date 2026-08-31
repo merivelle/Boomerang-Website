@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { site } from "@/content/site";
+import { getNav, getSite } from "@/lib/cms/queries";
 import { LenisProvider } from "@/components/motion/LenisProvider";
 import { ViewportUnit } from "@/components/motion/ViewportUnit";
 import { PageTransition } from "@/components/motion/PageTransition";
@@ -18,19 +18,37 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://www.boomerang-music.com"),
-  title: {
-    default: `${site.name} — Trailer Music, Scoring & Sound Design`,
-    template: `%s — ${site.name}`,
-  },
-  description: site.intro,
-  openGraph: {
-    title: `${site.name} — ${site.founder}`,
+const FALLBACK_ORIGIN = "https://www.boomerang-music.com";
+
+/**
+ * metadataBase now comes from the database, which makes one editable field
+ * capable of breaking every canonical and OG URL on the site with no build
+ * error. Validate it and fall back rather than trusting the row.
+ */
+function origin(url: string): URL {
+  try {
+    return new URL(url);
+  } catch {
+    return new URL(FALLBACK_ORIGIN);
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSite();
+  return {
+    metadataBase: origin(site.canonicalUrl),
+    title: {
+      default: `${site.name} — Trailer Music, Scoring & Sound Design`,
+      template: `%s — ${site.name}`,
+    },
     description: site.intro,
-    type: "website",
-  },
-};
+    openGraph: {
+      title: `${site.name} — ${site.founder}`,
+      description: site.intro,
+      type: "website",
+    },
+  };
+}
 
 // The site is dark-only, so without themeColor iOS Safari paints its chrome
 // light and the page reads as a dark rectangle inside a white frame.
@@ -42,7 +60,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const [site, nav] = await Promise.all([getSite(), getNav()]);
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       {/* Browser extensions (Grammarly, etc.) inject attributes on <body> before
@@ -51,9 +70,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ViewportUnit />
         <Preloader />
         <LenisProvider>
-          <Nav />
+          <Nav nav={nav} />
           <PageTransition>{children}</PageTransition>
-          <Footer />
+          <Footer site={site} nav={nav} />
         </LenisProvider>
       </body>
     </html>

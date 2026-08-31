@@ -1,31 +1,38 @@
 "use client";
 
-import { featured } from "@/content/projects";
+import { useMemo } from "react";
+import type { Project } from "@/lib/cms/types";
 import { HoverIndex, type IndexItem } from "@/components/work/HoverIndex";
 import { Waveform } from "@/components/motion/Waveform";
 import { useLightbox } from "@/components/media/LightboxProvider";
 
-// The slate is whatever `content/projects.ts` marks `featured`, in file order.
-const FILMS = featured;
-type FilmItem = IndexItem & (typeof FILMS)[number];
+// The slate is whatever carries a featured_rank, in curated order - which is
+// file order today and an editor's drag tomorrow. Not year order: The Revenant
+// (2015) leads and Cocaine Bear (2023) follows.
+type FilmItem = IndexItem & Project;
 
-const items: FilmItem[] = FILMS.map((f) => ({
-  ...f,
-  key: f.slug,
-  bgSlug: f.slug,
-  bgTitle: f.title,
-  bgClip: f.clip,
-}));
-
-function Index() {
+function Index({ films }: { films: Project[] }) {
   const { open } = useLightbox();
+
+  const items = useMemo<FilmItem[]>(
+    () =>
+      films.map((f) => ({
+        ...f,
+        key: f.slug,
+        bgSlug: f.slug,
+        bgStill: f.still,
+        bgTitle: f.title,
+        bgClip: f.clip,
+      })),
+    [films],
+  );
 
   return (
     <HoverIndex
       items={items}
       // Touch devices can't hover, so the slate walks itself instead.
       autoCycleMs={4000}
-      onSelect={(_item, i) => open(FILMS[i])}
+      onSelect={(_item, i) => open(films[i])}
       renderRow={(item, active, i) => (
         <div className="grid grid-cols-[2rem_1fr_auto] items-baseline gap-3 md:gap-6">
           <span className="font-mono text-[0.7rem] tabular-nums text-faint md:text-[0.62rem]">
@@ -67,7 +74,7 @@ function Index() {
   );
 }
 
-export function SelectedWorkIndex() {
+export function SelectedWorkIndex({ films }: { films: Project[] }) {
   return (
     <>
       <div className="mb-5 flex items-end justify-between">
@@ -78,7 +85,7 @@ export function SelectedWorkIndex() {
           Click to watch
         </p>
       </div>
-      <Index />
+      <Index films={films} />
     </>
   );
 }

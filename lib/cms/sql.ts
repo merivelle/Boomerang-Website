@@ -80,6 +80,12 @@ function toMedia(row: Record<string, unknown> | null): Media | null {
   };
 }
 
+/** Drop undefined keys so the shape matches the old optional-field type exactly. */
+function compact<T extends Record<string, unknown>>(o: T): T {
+  for (const k of Object.keys(o)) if (o[k] === undefined) delete o[k];
+  return o;
+}
+
 function toProject(row: Record<string, unknown>): Project {
   const r = row as never as {
     id: string; slug: string; title: string; studio: string; year: number;
@@ -91,27 +97,26 @@ function toProject(row: Record<string, unknown>): Project {
     clip: Record<string, unknown> | null;
     project_tags: Array<{ tags: { slug: string } }>;
   };
-  return {
+  return compact({
     id: r.id,
     slug: r.slug,
     title: r.title,
-    category: r.category,
+    category: r.category.label,
     studio: r.studio,
     year: r.year,
     role: r.role,
-    mood: r.mood,
+    mood: r.mood ?? undefined,
     // numeric arrives as a string; Number() is exact here because the column is
     // numeric(3,2), not a float.
-    tone: r.tone === null ? null : Number(r.tone),
-    trailerUrl: r.trailer_url,
-    still: toMedia(r.still),
-    placeholder: toMedia(r.placeholder),
-    clip: toMedia(r.clip),
+    tone: r.tone === null ? undefined : Number(r.tone),
+    trailerUrl: r.trailer_url ?? undefined,
+    still: toMedia(r.still)?.url,
+    clip: toMedia(r.clip)?.url,
     tags: (r.project_tags ?? []).map((t) => t.tags.slug).sort(),
-    featuredRank: r.featured_rank,
-    heroRank: r.hero_rank,
+    featuredRank: r.featured_rank ?? undefined,
+    heroRank: r.hero_rank ?? undefined,
     published: r.published,
-  };
+  }) as Project;
 }
 
 // ----------------------------------------------------------------- queries --
@@ -210,13 +215,13 @@ export async function getClientGroups(f: Fetcher): Promise<ClientGroup[]> {
     clients: g.clients
       .filter((c) => c.published)
       .sort((a, b) => a.sort_index - b.sort_index)
-      .map((c): Client => ({
+      .map((c): Client => compact({
         id: c.id,
         slug: c.slug,
         name: c.name,
-        websiteUrl: c.website_url,
-        logo: toMedia(c.logo),
-      })),
+        websiteUrl: c.website_url ?? undefined,
+        logo: toMedia(c.logo)?.url,
+      }) as Client),
   }));
 }
 
@@ -277,7 +282,7 @@ export async function getSeo(f: Fetcher, path: string): Promise<SeoPage | null> 
     path: r.path,
     title: r.title,
     description: r.description,
-    ogImage: toMedia(r.og),
+    ogImage: toMedia(r.og)?.url ?? null,
     noindex: r.noindex,
   };
 }
