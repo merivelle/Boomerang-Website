@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { getNav, getSite } from "@/lib/cms/queries";
-import { LenisProvider } from "@/components/motion/LenisProvider";
-import { ViewportUnit } from "@/components/motion/ViewportUnit";
-import { PageTransition } from "@/components/motion/PageTransition";
-import { Preloader } from "@/components/home/Preloader";
-import { Nav } from "@/components/layout/Nav";
-import { Footer } from "@/components/layout/Footer";
+import { getSite } from "@/lib/cms/queries";
 
 // One family, one voice. Geist is the closest open face to Neue Montreal /
 // Aeonik, and unlike Inter or DM Sans it isn't on the reflex-reject list.
@@ -60,20 +54,13 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [site, nav] = await Promise.all([getSite(), getNav()]);
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       {/* Browser extensions (Grammarly, etc.) inject attributes on <body> before
           React hydrates; suppress the resulting dev-only hydration warning. */}
       <body className="min-h-screen" suppressHydrationWarning>
-        <ViewportUnit />
-        <Preloader />
-        <LenisProvider>
-          <Nav nav={nav} />
-          <PageTransition>{children}</PageTransition>
-          <Footer site={site} nav={nav} />
-        </LenisProvider>
+        {children}
       </body>
     </html>
   );
