@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Posts to /api/contact (SMTP via nodemailer). Editorial rows: label far-left,
+// Posts to /api/contact, which sends via Resend. Editorial rows: label far-left,
 // field far-right, thin rules between. The email arrives prefilled from the
 // homepage bubble via ?email=; the visitor adds name + message.
 const row =

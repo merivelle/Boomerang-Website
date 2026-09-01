@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { enquiryEmail } from "@/lib/email/enquiry";
 
 // Contact form send, via Resend.
 //
@@ -29,7 +30,11 @@ const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
  */
 async function recordInquiry(
   req: Request,
-  fields: { name: string; email: string; subject?: string; message: string },
+  fields: {
+    name: string; email: string; subject?: string; message: string;
+    /** Resend's message id, so "did this actually send?" stays answerable. */
+    resendId?: string;
+  },
 ) {
   try {
     const salt = process.env.INQUIRY_IP_SALT;
@@ -45,6 +50,7 @@ async function recordInquiry(
         email: fields.email,
         subject: fields.subject || null,
         message: fields.message,
+        resend_id: fields.resendId ?? null,
         referer: req.headers.get("referer"),
         user_agent: req.headers.get("user-agent"),
         ip_hash: ip && salt ? createHash("sha256").update(ip + salt).digest("hex") : null,
@@ -110,16 +116,28 @@ export async function POST(req: Request) {
     );
   }
 
+  // Absolute, because an email has no origin to resolve links against.
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "https://www.boomerang-music.com");
+
   try {
     const resend = new Resend(RESEND_API_KEY);
+    const mail = enquiryEmail({ name, email, subject, message, siteUrl });
+
     // Resend reports a rejected send in the response rather than throwing, so
     // the error branch has to cover both that and a transport failure.
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: CONTACT_FROM || FALLBACK_FROM,
       to: deliverTo,
       replyTo: `${name} <${email}>`,
-      subject: subject || `Enquiry from ${name}`,
-      text: `${message}\n\n— ${name} (${email})`,
+      subject: mail.subject,
+      html: mail.html,
+      // Never drop the plaintext part. HTML with no text alternative measurably
+      // hurts deliverability, and it is what a terminal client falls back to.
+      text: mail.text,
     });
     if (error) throw error;
 
@@ -127,7 +145,7 @@ export async function POST(req: Request) {
     // business function is that the message reaches the inbox; the record in
     // the admin is a convenience. If the database is down, the enquiry must
     // still go through.
-    void recordInquiry(req, { name, email, subject, message });
+    void recordInquiry(req, { name, email, subject, message, resendId: data?.id });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
