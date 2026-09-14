@@ -33,10 +33,21 @@ order, one at a time, checking each succeeds before moving on:
 | 2 | `migrations/0002_triggers.sql` | `updated_at`, the revision log, auto-profile on signup |
 | 3 | `migrations/0003_rls.sql` | row-level security — **do not skip this one** |
 | 4 | `migrations/0004_storage.sql` | the six storage buckets |
+| 5 | `migrations/0005_focal_nullable.sql` | lets a still have no chosen focal point |
+| 6 | `migrations/0006_cms.sql` | staged edits, publish history, the default sharing image |
 
 `0003_rls.sql` does two jobs: it grants the public key access to the tables it
 *should* read, and adds the policies that limit it to published rows. Until it
 runs the site cannot read anything at all — which is the safe direction to fail.
+
+`0006_cms.sql` is what makes the admin stage changes instead of publishing them
+the moment they are typed. Until it runs the admin still loads and still reads
+correctly — every draft query is written to fail to an empty list rather than an
+error — but saving anything reports that the database has not been updated yet.
+
+`SETUP.sql` is all six concatenated, for a project being created from scratch.
+Running the numbered files one at a time is still the better way to add one to a
+project that already exists, because you can see which step failed.
 
 ## 3. Turn off public signup
 

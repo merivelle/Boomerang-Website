@@ -1,48 +1,55 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseServer, currentUser } from "@/lib/supabase/server";
+import { friendly, slugify, uniqueSlug } from "@/lib/cms/admin-helpers";
+import { discardFor, getDraft, stageDraft } from "@/lib/cms/drafts";
 
-export type SaveResult = { ok: false; error: string } | { ok: true; slug: string };
+export type SaveResult = { ok: false; error: string } | { ok: true; slug: string; staged: boolean };
 
 /**
- * Busts every cached read the change could affect. This is what gives editors a
- * sub-second edit-to-live loop; the 24h revalidate in lib/cms/queries.ts is only
- * the backstop for a lost call.
+ * Every edit here is STAGED, not published. The live tables are untouched until
+ * someone presses Publish on /admin/publish, so a half-finished credit, a typo,
+ * or an experiment never reaches a visitor.
+ *
+ * Two conventions hold this together:
+ *
+ *   * A patch holds database column names, because lib/cms/preview.ts overlays
+ *     it straight onto raw rows with no translation.
+ *   * A key starting with "_" is a PSEUDO-field: something the editor thinks of
+ *     as one switch that is not one column. `_featured` becomes a rank at
+ *     publish time; `_focal` lands on the image's own row, not the credit's.
  */
-function publishChanges() {
-  revalidateTag("projects");
-  revalidateTag("media");
-  revalidatePath("/", "layout");
-}
 
-const slugify = (s: string) =>
-  s.toLowerCase().trim()
-    .replace(/['’]/g, "")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+const PROJECT_FIELDS = [
+  "title",
+  "studio",
+  "year",
+  "role",
+  "category_id",
+  "trailer_url",
+  "seo_title",
+  "seo_description",
+  "published",
+] as const;
 
 function readForm(form: FormData) {
-  const title = String(form.get("title") ?? "").trim();
-  const studio = String(form.get("studio") ?? "").trim();
-  const yearRaw = String(form.get("year") ?? "").trim();
-  const trailer = String(form.get("trailer_url") ?? "").trim();
+  const s = (k: string) => String(form.get(k) ?? "").trim();
+  const trailer = s("trailer_url");
 
   return {
-    title,
-    studio,
-    year: Number(yearRaw),
-    yearRaw,
-    role: String(form.get("role") ?? "").trim(),
-    category_id: String(form.get("category_id") ?? ""),
+    title: s("title"),
+    studio: s("studio"),
+    yearRaw: s("year"),
+    year: Number(s("year")),
+    role: s("role"),
+    category_id: s("category_id"),
     trailer_url: trailer === "" ? null : trailer,
-    seoTitle: String(form.get("seo_title") ?? "").trim(),
-    seoDescription: String(form.get("seo_description") ?? "").trim(),
+    seo_title: s("seo_title") || null,
+    seo_description: s("seo_description") || null,
     published: form.get("published") === "on",
     wantsFeatured: form.get("featured") === "on",
-    tagIds: form.getAll("tags").map(String),
+    tagIds: form.getAll("tags").map(String).sort(),
   };
 }
 
@@ -54,7 +61,8 @@ function validate(v: ReturnType<typeof readForm>): string | null {
   if (!Number.isInteger(v.year) || v.year < 1900 || v.year > 2100)
     return "That year doesn't look right — use a four-digit year like 2026.";
   if (!v.role) return "Say what kind of work this was.";
-  if (!v.category_id) return "Pick a category.";
+  // A uuid, or "new:<slug>" for a category that is itself still only staged.
+  if (!/^(new:[a-z0-9-]+|[0-9a-f-]{36})$/.test(v.category_id)) return "Pick a category.";
   if (v.trailer_url && !/^https:\/\//.test(v.trailer_url))
     return "The trailer link needs to start with https:// — or leave it blank.";
   return null;
@@ -70,172 +78,219 @@ export async function saveWork(slug: string | null, form: FormData): Promise<Sav
 
   const db = await supabaseServer();
 
-  // Featured requires a real poster (the database enforces this too). Rather
-  // than let the insert fail with a constraint name, say what is missing.
-  const row = {
+  const candidate: Record<string, unknown> = {
     title: v.title,
     studio: v.studio,
     year: v.year,
     role: v.role,
     category_id: v.category_id,
     trailer_url: v.trailer_url,
+    seo_title: v.seo_title,
+    seo_description: v.seo_description,
     published: v.published,
-    seo_title: v.seoTitle || null,
-    seo_description: v.seoDescription || null,
   };
 
-  let id: string;
-  let finalSlug: string;
-
-  if (slug) {
-    const { data: existing, error } = await db
-      .from("projects")
-      .select("id, slug, still_media_id, featured_rank")
-      .eq("slug", slug)
-      .single();
-    if (error || !existing) return { ok: false, error: "That credit no longer exists." };
-
-    if (v.wantsFeatured && !existing.still_media_id)
-      return { ok: false, error: "Add a poster before putting this in Selected Work." };
-
-    const featured_rank = v.wantsFeatured
-      ? (existing.featured_rank ?? (await nextFeaturedRank(db)))
-      : null;
-
-    const { error: e } = await db
-      .from("projects")
-      .update({ ...row, featured_rank } as never)
-      .eq("id", existing.id);
-    if (e) return { ok: false, error: friendly(e.message) };
-
-    id = existing.id;
-    finalSlug = existing.slug;
-  } else {
+  // ------------------------------------------------------------ a new credit --
+  if (!slug) {
     const base = slugify(v.title);
     if (!base) return { ok: false, error: "That title can't be turned into a web address." };
-    finalSlug = await uniqueSlug(db, base);
+    // Reserved now so the poster upload has something to attach to before the
+    // credit exists. Re-checked at publish, in case another one lands first.
+    const provisional = await uniqueSlug(db, base);
 
-    if (v.wantsFeatured)
-      return { ok: false, error: "Add a poster first, then you can put this in Selected Work." };
-
-    const { data, error } = await db
-      .from("projects")
-      .insert({ ...row, slug: finalSlug, sort_index: await nextSortIndex(db) } as never)
-      .select("id")
-      .single();
-    if (error) return { ok: false, error: friendly(error.message) };
-    id = (data as { id: string }).id;
+    const res = await stageDraft({
+      table: "projects",
+      rowKey: provisional,
+      op: "insert",
+      patch: { ...candidate, tags: v.tagIds, ...(v.wantsFeatured ? { _featured: true } : {}) },
+      label: v.title,
+      summary: "New credit, not on the website yet",
+    });
+    if (!res.ok) return { ok: false, error: res.error };
+    return { ok: true, slug: provisional, staged: true };
   }
 
-  // Tags: replace the set rather than diffing it. At one tag per credit the
-  // simplest correct thing is also the fastest.
-  await db.from("project_tags").delete().eq("project_id", id);
-  if (v.tagIds.length) {
-    await db
-      .from("project_tags")
-      .insert(v.tagIds.map((tag_id) => ({ project_id: id, tag_id })) as never);
+  // --------------------------------------------------------- an existing one --
+  const { data: liveRow, error } = await db
+    .from("projects")
+    .select("id,slug,still_media_id,featured_rank,title,studio,year,role,category_id,trailer_url,seo_title,seo_description,published")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  // No live row means this is a credit that is itself still only staged.
+  const draft = await getDraft("projects", { rowKey: slug });
+  if (error) return { ok: false, error: friendly(error.message) };
+  if (!liveRow && draft?.op !== "insert") return { ok: false, error: "That credit no longer exists." };
+
+  const live = (liveRow ?? {}) as Record<string, unknown>;
+  const stillId = (live.still_media_id as string | null) ?? (draft?.patch.still_media_id as string | null) ?? null;
+
+  if (v.wantsFeatured && !stillId)
+    return { ok: false, error: "Add a poster before putting this in Selected Work." };
+
+  if (draft?.op === "insert") {
+    const res = await stageDraft({
+      table: "projects",
+      rowKey: slug,
+      op: "insert",
+      patch: { ...candidate, tags: v.tagIds, _featured: v.wantsFeatured },
+      label: v.title,
+      summary: "New credit, not on the website yet",
+    });
+    return res.ok ? { ok: true, slug, staged: true } : { ok: false, error: res.error };
   }
 
-  publishChanges();
-  return { ok: true, slug: finalSlug };
+  // Only genuinely different values are staged. Typing a word and typing it
+  // back should leave nothing waiting to publish, and the Review screen should
+  // say "changed the year", not list every field on the form.
+  const patch: Record<string, unknown> = {};
+  for (const key of PROJECT_FIELDS) {
+    if (!same(live[key], candidate[key])) patch[key] = candidate[key];
+  }
+
+  const liveTags = await currentTagIds(db, live.id as string);
+  if (liveTags.join("|") !== v.tagIds.join("|")) patch.tags = v.tagIds;
+
+  const isFeatured = live.featured_rank !== null && live.featured_rank !== undefined;
+  if (isFeatured !== v.wantsFeatured) patch._featured = v.wantsFeatured;
+
+  // Merge with anything already staged, then decide whether a draft is still
+  // warranted: a poster staged earlier keeps the draft alive even when this
+  // save changes nothing.
+  const merged = { ...(draft?.patch ?? {}), ...patch };
+  for (const key of PROJECT_FIELDS) {
+    if (key in merged && same(live[key], merged[key])) delete merged[key];
+  }
+
+  if (!Object.keys(merged).length) {
+    if (draft) await discardFor("projects", { rowKey: slug });
+    return { ok: true, slug, staged: false };
+  }
+
+  const res = await stageDraft({
+    table: "projects",
+    rowKey: slug,
+    op: "update",
+    patch: merged,
+    label: (merged.title as string) ?? (live.title as string) ?? slug,
+  });
+  return res.ok ? { ok: true, slug, staged: true } : { ok: false, error: res.error };
 }
 
 /** The editor clicked the preview to say what must stay in frame. */
 export async function setFocalPoint(slug: string, x: number, y: number) {
-  const db = await supabaseServer();
-  const { data } = await db.from("projects").select("still_media_id").eq("slug", slug).single();
-  const id = (data as { still_media_id: string | null } | null)?.still_media_id;
-  if (!id) return;
+  const clamp = (n: number) => Math.min(1, Math.max(0, n));
+  const label = await labelFor(slug);
 
-  await db
-    .from("media")
-    .update({
-      focal_x: Math.min(1, Math.max(0, x)),
-      focal_y: Math.min(1, Math.max(0, y)),
-    } as never)
-    .eq("id", id);
-
-  publishChanges();
+  // Focal point belongs to the image row, not the credit, but an editor thinks
+  // of it as part of this credit — so it rides along in the same draft under a
+  // pseudo-field and is unpacked at publish.
+  await stageDraft({
+    table: "projects",
+    rowKey: slug,
+    patch: { _focal: { x: clamp(x), y: clamp(y) } },
+    label,
+    summary: "Changed where the poster crops",
+  });
 }
 
 export async function setPublished(slug: string, published: boolean) {
   const db = await supabaseServer();
-  // Unpublishing has to release the curated slots, or the database constraint
-  // that keeps unpublished films out of the homepage rejects the update.
-  const patch = published ? { published } : { published, featured_rank: null, hero_rank: null };
-  await db.from("projects").update(patch as never).eq("slug", slug);
-  publishChanges();
+  const { data } = await db
+    .from("projects")
+    .select("title,published")
+    .eq("slug", slug)
+    .maybeSingle();
+  const live = data as { title: string; published: boolean } | null;
+
+  if (live && live.published === published) {
+    await discardFor("projects", { rowKey: slug });
+    return;
+  }
+
+  await stageDraft({
+    table: "projects",
+    rowKey: slug,
+    patch: { published },
+    label: live?.title ?? slug,
+    summary: published ? "Putting it on the website" : "Taking it off the website",
+  });
 }
 
 export async function deleteWork(slug: string) {
-  const db = await supabaseServer();
-  await db.from("projects").delete().eq("slug", slug);
-  publishChanges();
+  const draft = await getDraft("projects", { rowKey: slug });
+
+  // A credit that only ever existed as a draft is thrown away outright — there
+  // is nothing on the website to remove, so asking someone to publish a
+  // deletion of something that was never published would be nonsense.
+  if (draft?.op === "insert") {
+    await discardFor("projects", { rowKey: slug });
+    redirect("/admin/work");
+  }
+
+  await stageDraft({
+    table: "projects",
+    rowKey: slug,
+    op: "delete",
+    patch: {},
+    label: await labelFor(slug),
+    summary: "Removing it from the website",
+  });
   redirect("/admin/work");
 }
 
 export async function duplicateWork(slug: string) {
   const db = await supabaseServer();
-  const { data } = await db.from("projects").select("*").eq("slug", slug).single();
+  const { data } = await db.from("projects").select("*").eq("slug", slug).maybeSingle();
   if (!data) return;
   const src = data as Record<string, unknown>;
 
-  const copy = {
-    ...src,
-    id: undefined,
-    slug: await uniqueSlug(db, `${src.slug}-copy`),
-    title: `${src.title} (copy)`,
+  const title = `${src.title} (copy)`;
+  const provisional = await uniqueSlug(db, slugify(title));
+
+  await stageDraft({
+    table: "projects",
+    rowKey: provisional,
+    op: "insert",
     // A duplicate never inherits a curated slot or a live state: those are
     // decisions about the real credit, not properties of it.
-    featured_rank: null,
-    hero_rank: null,
-    published: false,
-    sort_index: await nextSortIndex(db),
-    created_at: undefined,
-    updated_at: undefined,
-  };
-  delete copy.id;
-  delete copy.created_at;
-  delete copy.updated_at;
-
-  await db.from("projects").insert(copy as never);
-  publishChanges();
+    patch: {
+      title,
+      studio: src.studio,
+      year: src.year,
+      role: src.role,
+      category_id: src.category_id,
+      trailer_url: src.trailer_url,
+      still_media_id: src.still_media_id,
+      published: false,
+      tags: await currentTagIds(db, src.id as string),
+    },
+    label: title,
+    summary: `Copied from ${src.title}`,
+  });
 }
 
-// ---------------------------------------------------------------- helpers --
+// ----------------------------------------------------------------- helpers --
 
 type DB = Awaited<ReturnType<typeof supabaseServer>>;
 
-async function nextSortIndex(db: DB) {
-  const { data } = await db.from("projects").select("sort_index")
-    .order("sort_index", { ascending: false }).limit(1).single();
-  return ((data as { sort_index: number } | null)?.sort_index ?? 0) + 10;
+async function currentTagIds(db: DB, projectId: string): Promise<string[]> {
+  if (!projectId) return [];
+  const { data } = await db.from("project_tags").select("tag_id").eq("project_id", projectId);
+  return (data ?? []).map((r) => (r as { tag_id: string }).tag_id).sort();
 }
 
-async function nextFeaturedRank(db: DB) {
-  const { data } = await db.from("projects").select("featured_rank")
-    .not("featured_rank", "is", null)
-    .order("featured_rank", { ascending: false }).limit(1).single();
-  return ((data as { featured_rank: number } | null)?.featured_rank ?? 0) + 1;
+async function labelFor(slug: string): Promise<string> {
+  const db = await supabaseServer();
+  const { data } = await db.from("projects").select("title").eq("slug", slug).maybeSingle();
+  return (data as { title: string } | null)?.title ?? slug;
 }
 
-async function uniqueSlug(db: DB, base: string) {
-  const { data } = await db.from("projects").select("slug").like("slug", `${base}%`);
-  const taken = new Set((data ?? []).map((r) => (r as { slug: string }).slug));
-  if (!taken.has(base)) return base;
-  for (let i = 2; i < 500; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`;
-  return `${base}-${Date.now()}`;
-}
-
-/** Database errors, translated. An editor should never see a constraint name. */
-function friendly(message: string): string {
-  if (/hero_needs_a_real_still|featured_needs_a_real_still/.test(message))
-    return "Add a poster before putting this on the homepage.";
-  if (/hero_must_be_published|featured_must_be_published/.test(message))
-    return "A credit has to be published before it can go on the homepage.";
-  if (/projects_slug_key|duplicate key/.test(message))
-    return "There's already a credit with that web address.";
-  if (/row-level security|permission denied/.test(message))
-    return "You don't have permission to change that. Ask your developer.";
-  return "That didn't save. Please try again, and tell your developer if it keeps happening.";
+/** Loose equality across the null/"" and number/string mismatches a form produces. */
+function same(a: unknown, b: unknown): boolean {
+  const norm = (v: unknown) => (v === "" || v === undefined ? null : v);
+  const x = norm(a);
+  const y = norm(b);
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
 }

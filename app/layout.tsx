@@ -29,6 +29,10 @@ function origin(url: string): URL {
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSite();
+  // Editable in Settings; the committed file stays the fallback so the site is
+  // never shared with no image at all.
+  const og = site.ogImage ?? "/og.jpg";
+
   return {
     metadataBase: origin(site.canonicalUrl),
     title: {
@@ -40,13 +44,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${site.name} — ${site.founder}`,
       description: site.intro,
       type: "website",
-      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: site.name }],
+      images: [{ url: og, width: 1200, height: 630, alt: site.name }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${site.name} — ${site.founder}`,
       description: site.intro,
-      images: ["/og.jpg"],
+      images: [og],
     },
   };
 }

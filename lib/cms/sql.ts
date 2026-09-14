@@ -321,6 +321,16 @@ export async function getSite(f: Fetcher): Promise<SiteSettings> {
     phone: r.phone, phoneHref: r.phone_href,
     instagramHandle: r.instagram_handle, instagramUrl: r.instagram_url,
     copyrightYear: r.copyright_year,
+    // The view emits the media row's location columns rather than its id, so
+    // the same resolver every other image goes through works here too.
+    ogImage:
+      r.og_legacy_public_path || r.og_object_path
+        ? mediaUrl({
+            bucket: r.og_bucket ?? null,
+            object_path: r.og_object_path ?? null,
+            legacy_public_path: r.og_legacy_public_path ?? null,
+          })
+        : null,
   };
 }
 

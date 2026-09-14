@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { createHash } from "node:crypto";
 import { supabaseAdmin, supabaseServer } from "@/lib/supabase/server";
 import { buildTriptych } from "@/lib/wordmark";
+import { stageDraft } from "@/lib/cms/drafts";
 
 export type CurationResult = { ok: boolean; error?: string };
 
@@ -165,4 +166,72 @@ export async function saveFeatured(slugs: string[]): Promise<CurationResult> {
 
   publishChanges();
   return { ok: true };
+}
+
+// ------------------------------------------------------------------ staging --
+
+/**
+ * The editor's side of the homepage: nothing here touches the live tables.
+ * saveHero and saveFeatured above are the PUBLISH step, called by
+ * app/(admin)/admin/(app)/publish/actions.ts when someone presses Publish.
+ *
+ * Validation runs at both ends. Here so the editor is told immediately, and
+ * there because the six-slot rule and the poster rule are the database's, and a
+ * draft can go stale between staging and publishing.
+ */
+export async function stageHero(slugs: string[]): Promise<CurationResult> {
+  if (slugs.length !== 6)
+    return { ok: false, error: `The hero needs exactly 6 films — you have ${slugs.length}.` };
+  if (new Set(slugs).size !== 6) return { ok: false, error: "The same film is in two slots." };
+
+  const problem = await unusable(slugs);
+  if (problem) return { ok: false, error: problem };
+
+  const res = await stageDraft({
+    table: "homepage",
+    rowKey: "homepage",
+    patch: { hero: slugs },
+    label: "Homepage hero",
+    summary: "Changed the six films across the top of the homepage",
+  });
+  return res.ok ? { ok: true } : { ok: false, error: res.error };
+}
+
+export async function stageFeatured(slugs: string[]): Promise<CurationResult> {
+  if (slugs.length < 1) return { ok: false, error: "Selected Work needs at least one film." };
+
+  const problem = await unusable(slugs);
+  if (problem) return { ok: false, error: problem };
+
+  const res = await stageDraft({
+    table: "homepage",
+    rowKey: "homepage",
+    patch: { featured: slugs },
+    label: "Selected Work",
+    summary: "Changed the numbered list on the homepage",
+  });
+  return res.ok ? { ok: true } : { ok: false, error: res.error };
+}
+
+/** Names any film that can't legally be curated, in the editor's words. */
+async function unusable(slugs: string[]): Promise<string | null> {
+  const db = await supabaseServer();
+  const { data } = await db
+    .from("projects")
+    .select("slug,title,still_media_id,published")
+    .in("slug", slugs);
+
+  const rows = (data ?? []) as Array<{
+    slug: string; title: string; still_media_id: string | null; published: boolean;
+  }>;
+
+  const noPoster = rows.filter((r) => !r.still_media_id);
+  if (noPoster.length)
+    return `${noPoster.map((r) => r.title).join(", ")} needs a poster first.`;
+
+  const hidden = rows.filter((r) => !r.published);
+  if (hidden.length)
+    return `${hidden.map((r) => r.title).join(", ")} is hidden — put it on the website first.`;
+
+  return null;
 }

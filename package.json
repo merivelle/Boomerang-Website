@@ -15,12 +15,17 @@
     "wordmark": "node scripts/gen-wordmark.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "gsap": "^3.15.0",
     "lenis": "1.1.18",
+    "lucide-react": "^1.39.0",
     "motion": "11.18.0",
     "next": "^15.5.20",
     "react": "19.0.0",

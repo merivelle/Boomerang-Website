@@ -96,6 +96,8 @@ export type SiteSettings = {
   instagramHandle: string | null;
   instagramUrl: string | null;
   copyrightYear: number | null;
+  /** Site-wide sharing image, resolved to a URL. Null falls back to /og.jpg. */
+  ogImage: string | null;
 };
 
 export type NavItem = { label: string; href: string };

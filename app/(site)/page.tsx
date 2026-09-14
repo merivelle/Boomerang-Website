@@ -11,7 +11,31 @@ import {
   getHeroWordmarks,
   getHomeGrid,
   getLogoClients,
+  getSite,
+  seoMetadata,
 } from "@/lib/cms/queries";
+
+/**
+ * The homepage had no generateMetadata at all, so it inherited the root and the
+ * seo_pages row for "/" — the one the admin's Search & sharing screen edits —
+ * was written and then never read by anything. Everything typed there was
+ * silently discarded.
+ *
+ * The fallbacks reproduce exactly what the root title and description used to
+ * resolve to, so a blank row leaves the rendered page byte-identical.
+ */
+export async function generateMetadata() {
+  const site = await getSite();
+  const meta = await seoMetadata("/", {
+    title: `${site.name} — Trailer Music, Scoring & Sound Design`,
+    description: site.intro,
+  });
+
+  // `absolute` because the root sets a "%s — Boomerang" template. A plain
+  // string here would come out as "Boomerang — ... — Boomerang"; the homepage
+  // is the one page whose title is already whole.
+  return { ...meta, title: { absolute: meta.title } };
+}
 
 // The homepage the loader reveals to. One scroll:
 // Hero C → Selected Work → Clients → Work gallery → Contact. Nav links jump to

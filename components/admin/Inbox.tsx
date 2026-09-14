@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Archive, Check, Copy, Mail, Reply, Search, Ban } from "lucide-react";
 import { setInquiryStatus } from "@/app/(admin)/admin/(app)/messages/actions";
+import {
+  Button,
+  Card,
+  Dialog,
+  EmptyState,
+  FilterTabs,
+  PageTitle,
+  cn,
+  useToast,
+} from "./ui";
 
 export type Message = {
   id: string;
@@ -15,10 +26,18 @@ export type Message = {
 };
 
 const TABS = [
-  { key: "inbox", label: "Inbox" },
-  { key: "replied", label: "Replied" },
-  { key: "archived", label: "Archived" },
+  { id: "new", label: "New" },
+  { id: "read", label: "Read" },
+  { id: "archived", label: "Archived" },
 ] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+function inTab(m: Message, tab: TabId) {
+  if (tab === "new") return m.status === "new";
+  if (tab === "read") return m.status === "read" || m.status === "replied";
+  return m.status === "archived" || m.status === "spam";
+}
 
 function when(iso: string) {
   const d = new Date(iso);
@@ -31,18 +50,27 @@ function when(iso: string) {
 
 export function Inbox({ messages }: { messages: Message[] }) {
   const router = useRouter();
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("inbox");
+  const toast = useToast();
+
+  const [tab, setTab] = useState<TabId>("new");
+  const [q, setQ] = useState("");
   const [open, setOpen] = useState<Message | null>(null);
   const [pending, start] = useTransition();
 
-  const shown = messages.filter((m) =>
-    tab === "inbox"
-      ? m.status === "new" || m.status === "read"
-      : tab === "replied"
-        ? m.status === "replied"
-        : m.status === "archived" || m.status === "spam",
-  );
-  const unread = messages.filter((m) => m.status === "new").length;
+  const shown = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return messages.filter((m) => {
+      if (!inTab(m, tab)) return false;
+      if (!needle) return true;
+      return `${m.name} ${m.email} ${m.subject ?? ""} ${m.message}`.toLowerCase().includes(needle);
+    });
+  }, [messages, tab, q]);
+
+  const counts = {
+    new: messages.filter((m) => inTab(m, "new")).length,
+    read: messages.filter((m) => inTab(m, "read")).length,
+    archived: messages.filter((m) => inTab(m, "archived")).length,
+  };
 
   function mark(m: Message, status: Message["status"]) {
     start(async () => {
@@ -53,139 +81,176 @@ export function Inbox({ messages }: { messages: Message[] }) {
 
   function openMessage(m: Message) {
     setOpen(m);
+    // Opening it IS reading it. Making someone press a second button to say so
+    // is the kind of busywork that leaves an inbox permanently "unread".
     if (m.status === "new") mark(m, "read");
   }
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl tracking-[-0.02em] text-zinc-900">Messages</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Enquiries from the contact form. Every one is also emailed to you.
-          </p>
+      <PageTitle
+        title="Messages"
+        description="Enquiries from the contact form. Every one is also emailed to you, so this is a record rather than the only copy."
+      />
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <FilterTabs
+          tabs={TABS.map((t) => ({ ...t, count: counts[t.id] }))}
+          value={tab}
+          onChange={setTab}
+          className="flex-1"
+        />
+        <div className="relative w-full sm:w-64">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+          />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search messages"
+            aria-label="Search messages"
+            className="admin-input pl-9"
+          />
         </div>
       </div>
 
-      <div className="mt-6 flex gap-1 border-b border-zinc-200">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm transition-colors ${
-              tab === t.key
-                ? "border-zinc-900 text-zinc-900"
-                : "border-transparent text-zinc-500 hover:text-zinc-900"
-            }`}
-          >
-            {t.label}
-            {t.key === "inbox" && unread > 0 && (
-              <span className="ml-2 rounded-full bg-zinc-900 px-1.5 py-0.5 text-[0.65rem] text-white">
-                {unread}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <ul className="mt-4 divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
-        {shown.map((m) => (
-          <li key={m.id}>
-            <button
-              onClick={() => openMessage(m)}
-              className="flex w-full items-baseline gap-4 px-4 py-3 text-left transition-colors hover:bg-zinc-50"
-            >
-              <span
-                aria-hidden
-                className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                  m.status === "new" ? "bg-zinc-900" : "bg-transparent"
-                }`}
-              />
-              <span className="w-40 shrink-0 truncate text-sm text-zinc-900">{m.name}</span>
-              <span className="min-w-0 flex-1 truncate text-sm text-zinc-500">
-                {m.subject ? `${m.subject} — ` : ""}
-                {m.message}
-              </span>
-              <span className="shrink-0 font-mono text-xs text-zinc-400">{when(m.createdAt)}</span>
-            </button>
-          </li>
-        ))}
-        {shown.length === 0 && (
-          <li className="px-4 py-12 text-center text-sm text-zinc-500">
-            {tab === "inbox" ? "No new messages." : "Nothing here."}
-          </li>
-        )}
-      </ul>
+      {shown.length === 0 ? (
+        <div className="mt-5">
+          <EmptyState
+            icon={Mail}
+            title={
+              q
+                ? "No messages match"
+                : tab === "new"
+                  ? "No new messages"
+                  : tab === "read"
+                    ? "Nothing read yet"
+                    : "Nothing archived"
+            }
+            description={
+              q
+                ? "Try a different search."
+                : tab === "new"
+                  ? "When someone fills in the contact form, it lands here — and in your email."
+                  : undefined
+            }
+          />
+        </div>
+      ) : (
+        <Card className="mt-5 overflow-hidden">
+          <ul className="divide-y divide-zinc-100">
+            {shown.map((m) => (
+              <li key={m.id}>
+                <button
+                  onClick={() => openMessage(m)}
+                  className="flex w-full items-baseline gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-50"
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
+                      m.status === "new" ? "bg-blue-600" : "bg-transparent",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "w-40 shrink-0 truncate text-[0.9375rem]",
+                      m.status === "new" ? "font-medium text-zinc-900" : "text-zinc-800",
+                    )}
+                  >
+                    {m.name}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[0.875rem] text-zinc-500">
+                    {m.subject && <span className="text-zinc-700">{m.subject} — </span>}
+                    {m.message}
+                  </span>
+                  {m.status === "replied" && (
+                    <span className="shrink-0 text-[0.75rem] text-emerald-700">Replied</span>
+                  )}
+                  <span className="shrink-0 font-mono text-[0.75rem] text-zinc-400">
+                    {when(m.createdAt)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 px-6 py-10">
-          <div className="flex max-h-full w-full max-w-2xl flex-col rounded-lg bg-white shadow-xl">
-            <div className="flex items-start justify-between gap-4 border-b border-zinc-200 p-6">
-              <div className="min-w-0">
-                <p className="text-lg text-zinc-900">{open.subject || "Enquiry"}</p>
-                <p className="mt-1 truncate text-sm text-zinc-600">
-                  {open.name} · <span className="text-zinc-500">{open.email}</span>
-                </p>
-                <p className="mt-0.5 font-mono text-xs text-zinc-400">
-                  {new Date(open.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <button
-                onClick={() => setOpen(null)}
-                aria-label="Close"
-                className="shrink-0 rounded px-2 py-1 text-zinc-400 hover:text-zinc-900"
+        <Dialog
+          open
+          onClose={() => setOpen(null)}
+          title={open.subject || "Enquiry"}
+          description={`${open.name} · ${open.email} · ${new Date(open.createdAt).toLocaleString()}`}
+          size="lg"
+          footer={
+            <>
+              <Button
+                disabled={pending}
+                onClick={() => {
+                  mark(open, "archived");
+                  setOpen(null);
+                  toast.info("Archived.");
+                }}
               >
-                ✕
-              </button>
-            </div>
-
-            <div className="overflow-y-auto p-6">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-800">
-                {open.message}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 p-4">
-              <div className="flex gap-2">
-                <button
-                  disabled={pending}
-                  onClick={() => {
-                    mark(open, "archived");
-                    setOpen(null);
-                  }}
-                  className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:border-zinc-400"
-                >
-                  Archive
-                </button>
-                <button
-                  disabled={pending}
-                  onClick={() => {
-                    mark(open, "spam");
-                    setOpen(null);
-                  }}
-                  className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-500 hover:border-zinc-400"
-                >
-                  Spam
-                </button>
-              </div>
-
+                <Archive className="h-4 w-4" />
+                Archive
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={pending}
+                onClick={() => {
+                  mark(open, "spam");
+                  setOpen(null);
+                  toast.info("Marked as spam.");
+                }}
+              >
+                <Ban className="h-4 w-4" />
+                Spam
+              </Button>
+              <div className="flex-1" />
+              <Button
+                onClick={() => {
+                  void navigator.clipboard.writeText(open.email);
+                  toast.success("Email address copied.");
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                Copy address
+              </Button>
               {/* Opens their own mail app rather than sending from the site, so
                   the reply lands in their sent folder where they expect it. */}
               <a
                 href={`mailto:${open.email}?subject=${encodeURIComponent(
                   `Re: ${open.subject || "Your enquiry"}`,
-                )}&body=${encodeURIComponent(`\n\n— \n\nOn ${new Date(open.createdAt).toLocaleDateString()}, ${open.name} wrote:\n${open.message.replace(/^/gm, "> ")}`)}`}
+                )}&body=${encodeURIComponent(
+                  `\n\n— \n\nOn ${new Date(open.createdAt).toLocaleDateString()}, ${open.name} wrote:\n${open.message.replace(/^/gm, "> ")}`,
+                )}`}
                 onClick={() => {
                   mark(open, "replied");
                   setOpen(null);
                 }}
-                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 text-[0.875rem] font-medium text-white shadow-sm transition-colors hover:bg-zinc-800"
               >
+                <Reply className="h-4 w-4" />
                 Reply
               </a>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-zinc-800">
+            {open.message}
+          </p>
+
+          {open.status === "replied" && (
+            <p className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-[0.8125rem] text-emerald-800">
+              <Check className="h-4 w-4 shrink-0" />
+              You&rsquo;ve replied to this one.
+            </p>
+          )}
+        </Dialog>
       )}
     </>
   );

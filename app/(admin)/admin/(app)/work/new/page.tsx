@@ -10,11 +10,14 @@ export default async function NewWorkPage() {
     <WorkForm
       data={{
         slug: null,
+        isNew: true,
+        hasDraft: false,
         title: "",
         studio: "",
         year: new Date().getFullYear(),
         role: "Trailer Campaign",
-        categoryId: o.categories.find((c) => c.label === "Film")?.id ?? "",
+        // The first button on the Work page, whatever it is called this year.
+        categoryId: o.categories[0]?.id ?? "",
         trailerUrl: "",
         // A new credit starts published: the poster is what actually gates
         // visibility, so an editor is never left wondering which of two

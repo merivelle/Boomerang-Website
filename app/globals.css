@@ -173,7 +173,6 @@
     transition-duration: 200ms !important;
   }
 }
-
 /* ───────────────────────────────────────────────────────────────────────────
    Admin chrome.
 
@@ -181,13 +180,22 @@
    render. The site's design system — the oklch ramp, the fluid type scale, the
    signature easing — stays exactly as it was; this only undoes the global body
    rules that make sense for a dark cinematic site and not for a form.
+
+   The admin is deliberately its own visual language. It is read at arm's length
+   by someone who is not a designer, so it optimises for legibility over
+   atmosphere: larger type, sentence-case labels, generous control heights, and
+   one accent colour that only ever means "you can act on this".
    ─────────────────────────────────────────────────────────────────────────── */
 @layer components {
   .admin-root {
     @apply bg-zinc-50 text-zinc-900;
-    line-height: 1.5;
+    /* 15px, not the site's 16/1.65. Denser interfaces read better slightly
+       smaller with more line-height than a long-form page wants. */
+    font-size: 0.9375rem;
+    line-height: 1.55;
     letter-spacing: 0;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* The site hides scrollbars globally. A long credit list needs them back. */
@@ -203,17 +211,108 @@
   }
 
   .admin-root :focus-visible {
-    outline: 2px solid theme("colors.zinc.900");
+    outline: 2px solid theme("colors.blue.600");
     outline-offset: 2px;
+    border-radius: 2px;
   }
 
-  /* One label style, so every field and column header reads the same. */
+  /* ---------------------------------------------------------- typography -- */
+
+  /* Page title. One per screen. */
+  .admin-h1 {
+    @apply text-[1.5rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-900;
+  }
+  /* Section title inside a page. */
+  .admin-h2 {
+    @apply text-[1.0625rem] font-semibold leading-snug tracking-[-0.01em] text-zinc-900;
+  }
+  /* Card title. */
+  .admin-h3 {
+    @apply text-[0.9375rem] font-semibold leading-snug text-zinc-900;
+  }
+  /* The sentence under a title. */
+  .admin-sub {
+    @apply text-[0.875rem] leading-relaxed text-zinc-500;
+  }
+
+  /* Field labels and table headers. Sentence case at a size you can actually
+     read — this replaces the 0.68rem uppercase mono that used to do every job
+     on the screen at once. */
   .admin-label {
-    @apply font-mono text-[0.68rem] uppercase tracking-[0.12em] text-zinc-500;
+    @apply block text-[0.8125rem] font-medium leading-none text-zinc-700;
   }
 
+  /* The old micro-label, kept for the few places that genuinely want a
+     typographic whisper: eyebrows above a section, column headers, metadata. */
+  .admin-eyebrow {
+    @apply font-mono text-[0.6875rem] uppercase tracking-[0.1em] text-zinc-500;
+  }
+
+  /* Helper text under a control. */
+  .admin-hint {
+    @apply text-[0.8125rem] leading-relaxed text-zinc-500;
+  }
+
+  /* ------------------------------------------------------------ controls -- */
+
+  /* 40px tall. Anything shorter is a fiddly target on a laptop trackpad. */
   .admin-input {
-    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-[0.95rem] text-zinc-900
-           placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900;
+    @apply block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-[0.9375rem]
+           leading-6 text-zinc-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)]
+           transition-[border-color,box-shadow] duration-150
+           placeholder:text-zinc-400
+           hover:border-zinc-400
+           focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-600/10
+           disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400;
+  }
+
+  .admin-input[aria-invalid="true"] {
+    @apply border-red-500 focus:border-red-600 focus:ring-red-600/10;
+  }
+
+  /* A <select> needs the arrow drawn back on once appearance is reset, and
+     needs right padding so text never slides under it. */
+  select.admin-input {
+    @apply cursor-pointer appearance-none bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2371717a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+
+  textarea.admin-input {
+    @apply resize-y leading-relaxed;
+    min-height: 5.5rem;
+  }
+
+  /* --------------------------------------------------------------- cards -- */
+
+  .admin-card {
+    @apply rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)];
+  }
+
+  /* ------------------------------------------------------------- surfaces -- */
+
+  /* Dark chip behind a white client logo. The logos are white PNGs, so they
+     need their own ground regardless of the surrounding card. */
+  .admin-logo-chip {
+    @apply flex items-center justify-center rounded-lg bg-zinc-900;
+  }
+
+  /* Checkerboard, for judging a transparent PNG in the media library. */
+  .admin-checker {
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #f1f1f3 25%, transparent 25%),
+      linear-gradient(-45deg, #f1f1f3 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f1f1f3 75%),
+      linear-gradient(-45deg, transparent 75%, #f1f1f3 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+  }
+
+  /* While a dnd-kit drag is in flight, stop the whole page selecting text. */
+  .admin-dragging,
+  .admin-dragging * {
+    @apply cursor-grabbing select-none;
   }
 }
